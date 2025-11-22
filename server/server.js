@@ -57,13 +57,33 @@ try {
 
 // 404 Handler for undefined routes
 app.use((req, res, next) => {
+    // Check if it's a method mismatch (e.g., GET on a POST-only route)
+    const methodMismatch = {
+        '/api/auth/login': 'POST',
+        '/api/auth/register': 'POST',
+        '/api/auth/forgot-password': 'POST',
+        '/api/auth/reset-password': 'POST',
+        '/api/auth/verify-admin': 'POST',
+        '/api/bookings': 'POST',
+        '/api/reviews': 'POST'
+    };
+
+    const correctMethod = methodMismatch[req.path];
+    const methodHint = correctMethod && req.method !== correctMethod 
+        ? ` This endpoint requires ${correctMethod} method, but you used ${req.method}.` 
+        : '';
+
     res.status(404).json({
-        message: `Route ${req.method} ${req.path} not found`,
+        message: `Route ${req.method} ${req.path} not found.${methodHint}`,
+        hint: correctMethod 
+            ? `Try using ${correctMethod} method instead of ${req.method}`
+            : 'Check the API documentation for the correct endpoint and method',
         availableEndpoints: [
             'GET /',
             'GET /api/health',
             'POST /api/auth/register',
             'POST /api/auth/login',
+            'GET /api/auth/me (requires auth)',
             'GET /api/tutors',
             'GET /api/tutors/:id'
         ]
