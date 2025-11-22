@@ -35,21 +35,23 @@ const AdminLogin = () => {
                 return;
             }
 
-            // Verify admin secret
+            // Store token temporarily for the verify-admin call
+            localStorage.setItem('token', data.token);
+
+            // Verify admin secret (token is now in localStorage, so interceptor will add it)
             const secretResponse = await api.post('/auth/verify-admin', {
                 adminSecret: formData.adminSecret
-            }, {
-                headers: { Authorization: `Bearer ${data.token}` }
             });
 
             if (!secretResponse.data.verified) {
+                // Remove token if verification fails
+                localStorage.removeItem('token');
                 setError('Invalid admin secret key');
                 setLoading(false);
                 return;
             }
 
-            // Store token and redirect
-            localStorage.setItem('token', data.token);
+            // Store user data and redirect
             localStorage.setItem('user', JSON.stringify(data));
             navigate('/admin-dashboard');
         } catch (err) {
