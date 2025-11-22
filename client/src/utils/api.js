@@ -13,11 +13,9 @@ const getBaseURL = () => {
         baseURL = 'http://localhost:5001/api';
     }
     
-    // Log in development to help debug
-    if (import.meta.env.DEV) {
-        console.log('API Base URL:', baseURL);
-        console.log('VITE_API_URL env var:', envURL);
-    }
+    // Log to help debug (both dev and prod)
+    console.log('API Base URL:', baseURL);
+    console.log('VITE_API_URL env var:', envURL || 'Not set (using default)');
     
     return baseURL;
 };
@@ -31,18 +29,18 @@ const api = axios.create({
     },
 });
 
-// Log the actual request URL in development
-if (import.meta.env.DEV) {
-    api.interceptors.request.use(
-        (config) => {
-            console.log('API Request:', config.method?.toUpperCase(), config.baseURL + config.url);
-            return config;
-        },
-        (error) => {
-            return Promise.reject(error);
-        }
-    );
-}
+// Log the actual request URL (both dev and prod for debugging)
+api.interceptors.request.use(
+    (config) => {
+        const fullURL = config.baseURL + config.url;
+        console.log('API Request:', config.method?.toUpperCase(), fullURL);
+        console.log('Has token:', !!localStorage.getItem('token'));
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 // Add a request interceptor
 api.interceptors.request.use(

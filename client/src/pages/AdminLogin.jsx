@@ -39,9 +39,14 @@ const AdminLogin = () => {
             localStorage.setItem('token', data.token);
 
             // Verify admin secret (token is now in localStorage, so interceptor will add it)
+            console.log('Calling verify-admin with token:', data.token ? 'Token present' : 'No token');
+            console.log('API base URL:', import.meta.env.VITE_API_URL);
+            
             const secretResponse = await api.post('/auth/verify-admin', {
                 adminSecret: formData.adminSecret
             });
+            
+            console.log('Verify-admin response:', secretResponse.data);
 
             if (!secretResponse.data.verified) {
                 // Remove token if verification fails
@@ -55,7 +60,23 @@ const AdminLogin = () => {
             localStorage.setItem('user', JSON.stringify(data));
             navigate('/admin-dashboard');
         } catch (err) {
-            setError(err.response?.data?.message || 'Admin login failed');
+            console.error('Admin login error:', err);
+            console.error('Error response:', err.response);
+            
+            // More detailed error messages
+            if (err.response?.status === 404) {
+                setError('API endpoint not found. Please check backend configuration.');
+            } else if (err.response?.status === 401) {
+                setError(err.response?.data?.message || 'Invalid credentials or admin secret');
+            } else if (err.response?.status === 403) {
+                setError(err.response?.data?.message || 'Access denied');
+            } else if (err.response?.data?.message) {
+                setError(err.response.data.message);
+            } else if (err.message) {
+                setError(`Network error: ${err.message}`);
+            } else {
+                setError('Admin login failed. Please try again.');
+            }
         } finally {
             setLoading(false);
         }
