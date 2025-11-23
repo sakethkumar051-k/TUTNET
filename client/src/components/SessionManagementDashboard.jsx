@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -8,7 +8,8 @@ import SessionDetailsModal from './SessionDetailsModal';
 import TodaysSessions from './TodaysSessions';
 
 const SessionManagementDashboard = () => {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [relationship, setRelationship] = useState(null);
     const [todaysSessions, setTodaysSessions] = useState([]);
     const [todaysNotes, setTodaysNotes] = useState([]);
@@ -54,6 +55,30 @@ const SessionManagementDashboard = () => {
                 const rel = students.find(s => s.studentId._id === studentId || s.studentId?._id === studentId);
                 if (rel) {
                     relationshipData = rel;
+                }
+            } else {
+                // If no parameters provided, auto-select the first current tutor/student
+                try {
+                    const { data: relationships } = user?.role === 'student' 
+                        ? await api.get('/current-tutors/student/my-tutors')
+                        : await api.get('/current-tutors/tutor/my-students');
+                    
+                    if (relationships && relationships.length > 0) {
+                        relationshipData = relationships[0];
+                        // Update URL to include the relationship ID for consistency
+                        const newParams = new URLSearchParams(searchParams);
+                        newParams.set('tab', 'sessions');
+                        if (user?.role === 'student') {
+                            newParams.set('tutorId', relationshipData.tutorId._id);
+                            newParams.set('currentTutorId', relationshipData._id);
+                        } else {
+                            newParams.set('studentId', relationshipData.studentId._id);
+                            newParams.set('currentTutorId', relationshipData._id);
+                        }
+                        navigate(`?${newParams.toString()}`, { replace: true });
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch relationships:', err);
                 }
             }
 
