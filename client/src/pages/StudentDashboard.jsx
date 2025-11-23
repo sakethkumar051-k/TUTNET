@@ -14,14 +14,23 @@ import TodaysSessions from '../components/TodaysSessions';
 import ProgressAnalytics from '../components/ProgressAnalytics';
 import SessionManagementDashboard from '../components/SessionManagementDashboard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 const StudentDashboard = () => {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'find-tutors');
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
+
+    // Sync activeTab with URL search params
+    useEffect(() => {
+        const tabFromUrl = searchParams.get('tab') || 'find-tutors';
+        if (tabFromUrl !== activeTab) {
+            setActiveTab(tabFromUrl);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         fetchStats();
@@ -108,11 +117,29 @@ const StudentDashboard = () => {
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
+                            onClick={() => {
+                                setActiveTab(tab.id);
+                                // Update URL without navigation
+                                const newSearchParams = new URLSearchParams(searchParams);
+                                newSearchParams.set('tab', tab.id);
+                                // Remove tutorId and currentTutorId when switching tabs (unless it's progress or sessions)
+                                if (tab.id !== 'progress' && tab.id !== 'sessions') {
+                                    newSearchParams.delete('tutorId');
+                                    newSearchParams.delete('currentTutorId');
+                                }
+                                navigate(`/student-dashboard?${newSearchParams.toString()}`, { replace: true });
+                            }}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' || e.key === ' ') {
                                     e.preventDefault();
                                     setActiveTab(tab.id);
+                                    const newSearchParams = new URLSearchParams(searchParams);
+                                    newSearchParams.set('tab', tab.id);
+                                    if (tab.id !== 'progress' && tab.id !== 'sessions') {
+                                        newSearchParams.delete('tutorId');
+                                        newSearchParams.delete('currentTutorId');
+                                    }
+                                    navigate(`/student-dashboard?${newSearchParams.toString()}`, { replace: true });
                                 }
                             }}
                             aria-current={activeTab === tab.id ? 'page' : undefined}
