@@ -13,7 +13,8 @@ const { authorize } = require('../middleware/role.middleware');
 
 router.use(protect);
 
-router.post('/', authorize('student'), createBooking);
+// Allow both students and tutors to create bookings
+router.post('/', authorize('student', 'tutor'), createBooking);
 router.get('/mine', getMyBookings);
 router.patch('/:id/cancel', authorize('student'), cancelBooking);
 router.patch('/:id/approve', authorize('tutor'), approveBooking);

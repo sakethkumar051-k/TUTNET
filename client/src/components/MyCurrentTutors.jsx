@@ -136,13 +136,10 @@ const MyCurrentTutors = () => {
                                         📊 View Analytics
                                     </button>
                                     <button
-                                        onClick={() => {
-                                            // Navigate to booking with pre-filled tutor
-                                            navigate('/student-dashboard?tab=find-tutors');
-                                        }}
+                                        onClick={() => navigate(`/student-dashboard?tab=sessions&tutorId=${relationship.tutorId._id}&currentTutorId=${relationship._id}`)}
                                         className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
                                     >
-                                        📅 Book Session
+                                        📅 Manage Sessions
                                     </button>
                                     <button
                                         onClick={() => {

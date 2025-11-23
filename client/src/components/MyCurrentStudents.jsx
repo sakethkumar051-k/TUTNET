@@ -97,6 +97,12 @@ const MyCurrentStudents = () => {
                                     >
                                         📊 View Progress
                                     </button>
+                                    <button
+                                        onClick={() => navigate(`/tutor-dashboard?tab=sessions&studentId=${relationship.studentId._id}&currentTutorId=${relationship._id}`)}
+                                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
+                                    >
+                                        📅 Manage Sessions
+                                    </button>
                                 </div>
                             </div>
                         );

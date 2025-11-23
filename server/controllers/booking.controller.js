@@ -5,45 +5,123 @@ const CurrentTutor = require('../models/CurrentTutor');
 
 // @desc    Create a new booking
 // @route   POST /api/bookings
-// @access  Private (Student)
+// @access  Private (Student or Tutor)
 const createBooking = async (req, res) => {
     try {
-        const { tutorId, subject, preferredSchedule } = req.body;
+        const { tutorId, studentId, subject, preferredSchedule, sessionDate, currentTutorId } = req.body;
 
-        // Check if tutor exists
-        const tutor = await User.findById(tutorId);
-        if (!tutor || tutor.role !== 'tutor') {
-            return res.status(404).json({ message: 'Tutor not found' });
-        }
+        let finalTutorId, finalStudentId;
 
-        // Check if tutor is approved
-        const tutorProfile = await TutorProfile.findOne({ userId: tutorId });
-        if (!tutorProfile || tutorProfile.approvalStatus !== 'approved') {
-            return res.status(400).json({ message: 'Tutor is not available for booking' });
-        }
+        // Determine tutor and student IDs based on user role
+        if (req.user.role === 'student') {
+            // Student booking a tutor
+            finalStudentId = req.user.id;
+            finalTutorId = tutorId;
 
-        // Parse session date from preferredSchedule if it's a date string
-        let sessionDate = null;
-        try {
-            // Try to parse date from preferredSchedule
-            const dateMatch = preferredSchedule.match(/\d{4}-\d{2}-\d{2}/);
-            if (dateMatch) {
-                sessionDate = new Date(dateMatch[0]);
+            if (!finalTutorId) {
+                return res.status(400).json({ message: 'Tutor ID is required' });
             }
-        } catch (e) {
-            // If parsing fails, leave as null
+
+            // Check if tutor exists
+            const tutor = await User.findById(finalTutorId);
+            if (!tutor || tutor.role !== 'tutor') {
+                return res.status(404).json({ message: 'Tutor not found' });
+            }
+
+            // Check if tutor is approved
+            const tutorProfile = await TutorProfile.findOne({ userId: finalTutorId });
+            if (!tutorProfile || tutorProfile.approvalStatus !== 'approved') {
+                return res.status(400).json({ message: 'Tutor is not available for booking' });
+            }
+        } else if (req.user.role === 'tutor') {
+            // Tutor booking for a student (must be a current student)
+            finalTutorId = req.user.id;
+            finalStudentId = studentId;
+
+            if (!finalStudentId) {
+                return res.status(400).json({ message: 'Student ID is required' });
+            }
+
+            // Verify this is a current student
+            if (currentTutorId) {
+                const currentTutor = await CurrentTutor.findById(currentTutorId);
+                if (!currentTutor || currentTutor.tutorId.toString() !== finalTutorId || 
+                    currentTutor.studentId.toString() !== finalStudentId) {
+                    return res.status(403).json({ message: 'Not authorized to book for this student' });
+                }
+            } else {
+                // Check if there's an active relationship
+                const currentTutor = await CurrentTutor.findOne({
+                    tutorId: finalTutorId,
+                    studentId: finalStudentId,
+                    isActive: true
+                });
+                if (!currentTutor) {
+                    return res.status(403).json({ message: 'No active relationship with this student' });
+                }
+            }
+
+            // Check if student exists
+            const student = await User.findById(finalStudentId);
+            if (!student || student.role !== 'student') {
+                return res.status(404).json({ message: 'Student not found' });
+            }
+        } else {
+            return res.status(403).json({ message: 'Only students and tutors can create bookings' });
+        }
+
+        // Parse session date
+        let parsedSessionDate = null;
+        if (sessionDate) {
+            parsedSessionDate = new Date(sessionDate);
+        } else if (preferredSchedule) {
+            try {
+                const dateMatch = preferredSchedule.match(/\d{4}-\d{2}-\d{2}/);
+                if (dateMatch) {
+                    parsedSessionDate = new Date(dateMatch[0]);
+                }
+            } catch (e) {
+                // If parsing fails, leave as null
+            }
+        }
+
+        // Find or use current tutor relationship
+        let currentTutor = null;
+        if (currentTutorId) {
+            currentTutor = await CurrentTutor.findById(currentTutorId);
+        } else {
+            currentTutor = await CurrentTutor.findOne({
+                studentId: finalStudentId,
+                tutorId: finalTutorId,
+                subject: subject,
+                isActive: true
+            });
         }
 
         const booking = await Booking.create({
-            studentId: req.user.id,
-            tutorId,
-            subject,
+            studentId: finalStudentId,
+            tutorId: finalTutorId,
+            subject: subject || (currentTutor ? currentTutor.subject : 'General'),
             preferredSchedule,
-            sessionDate: sessionDate,
-            status: 'pending'
+            sessionDate: parsedSessionDate,
+            status: req.user.role === 'tutor' ? 'approved' : 'pending', // Tutors can auto-approve
+            currentTutorId: currentTutor?._id
         });
 
-        res.status(201).json(booking);
+        // If tutor created booking, update relationship stats
+        if (req.user.role === 'tutor' && currentTutor) {
+            currentTutor.totalSessionsBooked += 1;
+            if (currentTutor.status === 'new') {
+                currentTutor.status = 'active';
+            }
+            await currentTutor.save();
+        }
+
+        const populatedBooking = await Booking.findById(booking._id)
+            .populate('studentId', 'name email')
+            .populate('tutorId', 'name email');
+
+        res.status(201).json(populatedBooking);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });

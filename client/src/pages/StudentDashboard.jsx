@@ -12,6 +12,7 @@ import AttendanceTracker from '../components/AttendanceTracker';
 import MyCurrentTutors from '../components/MyCurrentTutors';
 import TodaysSessions from '../components/TodaysSessions';
 import ProgressAnalytics from '../components/ProgressAnalytics';
+import SessionManagementDashboard from '../components/SessionManagementDashboard';
 import { useSearchParams } from 'react-router-dom';
 
 const StudentDashboard = () => {
@@ -82,6 +83,7 @@ const StudentDashboard = () => {
     const tabs = [
         { id: 'today', label: "Today's Classes", icon: '📅' },
         { id: 'current-tutors', label: 'My Current Tutors', icon: '👨‍🏫' },
+        { id: 'sessions', label: 'Session Management', icon: '📆' },
         { id: 'find-tutors', label: 'Find Tutors', icon: '🔍' },
         { id: 'favorites', label: 'Favorites', icon: '⭐' },
         { id: 'my-bookings', label: 'My Bookings', icon: '📋' },
@@ -127,6 +129,7 @@ const StudentDashboard = () => {
                 <div className="mt-6">
                     {activeTab === 'today' && <TodaysSessions />}
                     {activeTab === 'current-tutors' && <MyCurrentTutors />}
+                    {activeTab === 'sessions' && <SessionManagementDashboard />}
                     {activeTab === 'find-tutors' && <TutorList />}
                     {activeTab === 'favorites' && <FavoriteTutors />}
                     {activeTab === 'my-bookings' && <BookingList role="student" />}
