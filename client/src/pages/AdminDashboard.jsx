@@ -83,30 +83,29 @@ const AdminDashboard = () => {
 
                 {/* Main Content Area */}
                 <div className="flex-1 px-4 sm:px-6 lg:px-8 py-6">
-
-                {message.text && (
-                    <div className={`mb-4 p-4 rounded-md ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-                        {message.text}
-                    </div>
-                )}
-
-                {/* Tab Content */}
-                {activeTab === 'analytics' ? (
-                    <AdminAnalytics />
-                ) : (
-                    <div className="space-y-4">
-                        <div className="flex justify-end">
-                            <button
-                                onClick={fetchPendingTutors}
-                                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                            >
-                                <svg className="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                Refresh
-                            </button>
+                    {message.text && (
+                        <div className={`mb-4 p-4 rounded-md ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                            {message.text}
                         </div>
-                        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                    )}
+
+                    {/* Tab Content */}
+                    {activeTab === 'analytics' ? (
+                        <AdminAnalytics />
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="flex justify-end">
+                                <button
+                                    onClick={fetchPendingTutors}
+                                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                >
+                                    <svg className="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Refresh
+                                </button>
+                            </div>
+                            <div className="bg-white shadow overflow-hidden sm:rounded-md">
                     <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
                         <h3 className="text-lg leading-6 font-medium text-gray-900">
                             Pending Tutor Approvals
@@ -186,9 +185,10 @@ const AdminDashboard = () => {
                             ))}
                         </ul>
                     )}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );
