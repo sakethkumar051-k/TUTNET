@@ -39,6 +39,10 @@ const createReview = async (req, res) => {
             comment
         });
 
+        // Mark booking as reviewed
+        booking.hasReview = true;
+        await booking.save();
+
         // Update tutor average rating
         const tutorProfile = await TutorProfile.findOne({ userId: tutorId || booking.tutorId });
         if (tutorProfile) {

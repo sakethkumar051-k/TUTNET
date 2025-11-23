@@ -24,6 +24,10 @@ const bookingSchema = new mongoose.Schema({
         enum: ['pending', 'approved', 'rejected', 'cancelled', 'completed'],
         default: 'pending'
     },
+    hasReview: {
+        type: Boolean,
+        default: false
+    },
     adminApprovalRequired: {
         type: Boolean,
         default: true

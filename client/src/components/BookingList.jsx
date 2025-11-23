@@ -50,14 +50,15 @@ const BookingList = ({ role }) => {
         }
     };
 
-    const handleStatusUpdate = async (id, status) => {
+    const handleComplete = async (id) => {
+        if (!window.confirm('Mark this booking as completed? The student will be able to leave a review.')) return;
         try {
-            await api.patch(`/admin/bookings/${id}/${status === 'approved' ? 'approve' : 'reject'}`);
+            await api.patch(`/bookings/${id}/complete`);
             fetchBookings();
-            showSuccess(`Booking ${status}`);
+            showSuccess('Booking marked as completed!');
         } catch (err) {
             console.error(err);
-            showError('Failed to update status');
+            showError('Failed to complete booking');
         }
     };
 
@@ -97,39 +98,42 @@ const BookingList = ({ role }) => {
                         bookings.map((booking) => (
                             <li key={booking._id}>
                                 <div className="px-4 py-4 sm:px-6">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex items-center justify-between mb-2">
                                         <p className="text-sm font-medium text-indigo-600 truncate">
                                             {booking.subject}
                                         </p>
-                                        <div className="ml-2 flex-shrink-0 flex">
-                                            <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                      ${booking.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                        <div className="ml-2 flex-shrink-0">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                ${booking.status === 'approved' ? 'bg-green-100 text-green-800' :
                                                     booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                                         booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
                                                             booking.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
                                                                 booking.status === 'completed' ? 'bg-blue-100 text-blue-800' :
                                                                     'bg-gray-100 text-gray-800'}`}>
                                                 {booking.status}
-                                            </p>
+                                            </span>
                                         </div>
                                     </div>
                                     <div className="mt-2 sm:flex sm:justify-between">
-                                        <div className="sm:flex">
-                                            <p className="flex items-center text-sm text-gray-500">
+                                        <div className="sm:flex flex-col gap-1">
+                                            <p className="flex items-center text-sm text-gray-700 font-medium">
                                                 {role === 'tutor' ? `Student: ${booking.studentId?.name}` : `Tutor: ${booking.tutorId?.name}`}
                                             </p>
-                                            <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                                                Schedule: {booking.preferredSchedule}
+                                            <p className="flex items-center text-sm text-gray-500">
+                                                📅 {booking.preferredSchedule}
+                                            </p>
+                                            <p className="flex items-center text-xs text-gray-400">
+                                                Created: {new Date(booking.createdAt).toLocaleDateString()}
                                             </p>
                                         </div>
-                                        <div className="mt-2 flex items-center gap-2 text-sm sm:mt-0">
+                                        <div className="mt-3 sm:mt-0 flex flex-wrap items-center gap-2">
                                             {/* Student Actions */}
                                             {role === 'student' && (
                                                 <>
                                                     {booking.status === 'pending' && (
                                                         <button
                                                             onClick={() => handleCancel(booking._id)}
-                                                            className="text-red-600 hover:text-red-900 font-medium"
+                                                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 border border-red-200"
                                                         >
                                                             Cancel
                                                         </button>
@@ -137,13 +141,13 @@ const BookingList = ({ role }) => {
                                                     {booking.status === 'completed' && !booking.hasReview && (
                                                         <button
                                                             onClick={() => openReviewModal(booking)}
-                                                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700"
+                                                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                                                         >
-                                                            Leave Review
+                                                            ⭐ Leave Review
                                                         </button>
                                                     )}
                                                     {booking.status === 'completed' && booking.hasReview && (
-                                                        <span className="text-green-600 text-xs">
+                                                        <span className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-green-700 bg-green-50 border border-green-200">
                                                             ✓ Reviewed
                                                         </span>
                                                     )}
@@ -151,20 +155,32 @@ const BookingList = ({ role }) => {
                                             )}
 
                                             {/* Tutor Actions */}
-                                            {role === 'tutor' && booking.status === 'pending' && (
+                                            {role === 'tutor' && (
                                                 <>
-                                                    <button
-                                                        onClick={() => handleApprove(booking._id)}
-                                                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none"
-                                                    >
-                                                        Accept
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleReject(booking._id)}
-                                                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                                                    >
-                                                        Reject
-                                                    </button>
+                                                    {booking.status === 'pending' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleApprove(booking._id)}
+                                                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                                                            >
+                                                                ✓ Accept
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleReject(booking._id)}
+                                                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 border border-gray-300"
+                                                            >
+                                                                ✕ Reject
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {booking.status === 'approved' && (
+                                                        <button
+                                                            onClick={() => handleComplete(booking._id)}
+                                                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                                                        >
+                                                            ✓ Mark Complete
+                                                        </button>
+                                                    )}
                                                 </>
                                             )}
                                         </div>

@@ -152,10 +152,41 @@ const rejectBooking = async (req, res) => {
     }
 };
 
+// @desc    Complete a booking (Tutor)
+// @route   PATCH /api/bookings/:id/complete
+// @access  Private (Tutor)
+const completeBooking = async (req, res) => {
+    try {
+        const booking = await Booking.findById(req.params.id);
+
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        // Ensure tutor owns the booking
+        if (booking.tutorId.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'Not authorized' });
+        }
+
+        if (booking.status !== 'approved') {
+            return res.status(400).json({ message: 'Only approved bookings can be marked as completed' });
+        }
+
+        booking.status = 'completed';
+        await booking.save();
+
+        res.json({ message: 'Booking marked as completed', booking });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 module.exports = {
     createBooking,
     getMyBookings,
     cancelBooking,
     approveBooking,
-    rejectBooking
+    rejectBooking,
+    completeBooking
 };
