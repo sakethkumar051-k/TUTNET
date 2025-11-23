@@ -29,30 +29,39 @@ const SessionManagementDashboard = () => {
 
     const fetchRelationshipData = async () => {
         try {
-            let data;
-            if (user?.role === 'student' && tutorId) {
+            let relationshipData = null;
+            
+            if (currentTutorId) {
+                // If we have currentTutorId, use it directly
+                try {
+                    const { data: analytics } = await api.get(`/current-tutors/analytics/${currentTutorId}`);
+                    relationshipData = analytics.relationship;
+                } catch (err) {
+                    // Fallback: try to get relationship directly
+                    const { data: tutors } = user?.role === 'student' 
+                        ? await api.get('/current-tutors/student/my-tutors')
+                        : await api.get('/current-tutors/tutor/my-students');
+                    relationshipData = tutors.find(t => t._id === currentTutorId);
+                }
+            } else if (user?.role === 'student' && tutorId) {
                 const { data: tutors } = await api.get('/current-tutors/student/my-tutors');
-                const rel = tutors.find(t => t.tutorId._id === tutorId);
+                const rel = tutors.find(t => t.tutorId._id === tutorId || t.tutorId?._id === tutorId);
                 if (rel) {
-                    const { data: details } = await api.get(`/current-tutors/student/tutor/${tutorId}`);
-                    data = details;
+                    relationshipData = rel;
                 }
             } else if (user?.role === 'tutor' && studentId) {
                 const { data: students } = await api.get('/current-tutors/tutor/my-students');
-                const rel = students.find(s => s.studentId._id === studentId);
+                const rel = students.find(s => s.studentId._id === studentId || s.studentId?._id === studentId);
                 if (rel) {
-                    const { data: details } = await api.get(`/current-tutors/tutor/student/${studentId}`);
-                    data = details;
+                    relationshipData = rel;
                 }
-            } else if (currentTutorId) {
-                const { data: analytics } = await api.get(`/current-tutors/analytics/${currentTutorId}`);
-                data = analytics;
             }
 
-            if (data) {
-                setRelationship(data.relationship || data);
+            if (relationshipData) {
+                setRelationship(relationshipData);
             }
         } catch (err) {
+            console.error('Failed to fetch relationship data:', err);
             showError('Failed to fetch relationship data');
         } finally {
             setLoading(false);
