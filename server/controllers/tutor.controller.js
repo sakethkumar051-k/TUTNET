@@ -6,7 +6,7 @@ const User = require('../models/User');
 // @access  Public
 const getTutors = async (req, res) => {
     try {
-        const { subject, class: studentClass, area, minRate, maxRate } = req.query;
+        const { subject, class: studentClass, area, minRate, maxRate, limit } = req.query;
 
         let query = {
             approvalStatus: 'approved'
@@ -30,7 +30,14 @@ const getTutors = async (req, res) => {
         }
 
         // Find tutors matching profile criteria
-        let tutors = await TutorProfile.find(query).populate('userId', 'name email phone location isActive');
+        let tutorsQuery = TutorProfile.find(query).populate('userId', 'name email phone location isActive');
+        
+        // Apply limit if provided
+        if (limit) {
+            tutorsQuery = tutorsQuery.limit(parseInt(limit));
+        }
+        
+        let tutors = await tutorsQuery;
 
         // Filter by area (which is in the User model)
         if (area) {
