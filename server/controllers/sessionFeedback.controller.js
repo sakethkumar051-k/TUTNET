@@ -343,6 +343,31 @@ const markAttendance = async (req, res) => {
         if (duration) booking.duration = duration;
         await booking.save();
 
+        // Get or create SessionFeedback
+        let feedback = await SessionFeedback.findOne({ bookingId: req.params.bookingId });
+        if (!feedback) {
+            const currentTutor = await CurrentTutor.findOne({
+                studentId: booking.studentId,
+                tutorId: booking.tutorId,
+                subject: booking.subject,
+                isActive: true
+            });
+
+            feedback = await SessionFeedback.create({
+                bookingId: req.params.bookingId,
+                currentTutorId: currentTutor?._id,
+                studentId: booking.studentId,
+                tutorId: booking.tutorId,
+                sessionDate: booking.sessionDate || booking.createdAt
+            });
+        }
+
+        // Update SessionFeedback with attendance
+        feedback.attendanceStatus = status;
+        feedback.duration = duration || 60;
+        feedback.attendanceNotes = notes;
+        await feedback.save();
+
         // Create/update attendance record
         const attendance = await Attendance.findOneAndUpdate(
             {

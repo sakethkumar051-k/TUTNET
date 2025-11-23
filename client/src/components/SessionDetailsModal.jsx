@@ -25,8 +25,10 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
         type: 'topic',
         title: '',
         url: '',
-        description: ''
+        description: '',
+        file: null
     });
+    const [uploadingFile, setUploadingFile] = useState(false);
     const [homework, setHomework] = useState({
         description: '',
         dueDate: ''
@@ -57,6 +59,14 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                 setStudentFeedback({
                     studentRating: data.studentRating || 3,
                     studentComment: data.studentComment || ''
+                });
+            }
+            // Load attendance data if exists
+            if (data.attendanceStatus) {
+                setAttendance({
+                    status: data.attendanceStatus || 'completed',
+                    duration: data.duration || 60,
+                    notes: data.attendanceNotes || ''
                 });
             }
         } catch (err) {
@@ -94,15 +104,46 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
         }
     };
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setStudyMaterial({ ...studyMaterial, file });
+        }
+    };
+
     const handleAddStudyMaterial = async (e) => {
         e.preventDefault();
+        setUploadingFile(true);
         try {
-            await api.post(`/session-feedback/booking/${session._id}/study-material`, studyMaterial);
+            let materialData = { ...studyMaterial };
+            
+            // If file is selected, upload it first
+            if (studyMaterial.file) {
+                const formData = new FormData();
+                formData.append('file', studyMaterial.file);
+                formData.append('title', studyMaterial.title);
+                formData.append('description', studyMaterial.description);
+                formData.append('type', 'file');
+                
+                // Upload file (you'll need to implement this endpoint)
+                // For now, we'll use a placeholder URL
+                const fileUrl = URL.createObjectURL(studyMaterial.file);
+                materialData.url = fileUrl;
+                materialData.type = 'file';
+                materialData.fileName = studyMaterial.file.name;
+            }
+            
+            // Remove file object before sending
+            const { file, ...materialPayload } = materialData;
+            
+            await api.post(`/session-feedback/booking/${session._id}/study-material`, materialPayload);
             showSuccess('Study material added');
-            setStudyMaterial({ type: 'topic', title: '', url: '', description: '' });
+            setStudyMaterial({ type: 'topic', title: '', url: '', description: '', file: null });
             fetchFeedback();
         } catch (err) {
             showError('Failed to add study material');
+        } finally {
+            setUploadingFile(false);
         }
     };
 
@@ -256,10 +297,24 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                 </div>
                             </div>
 
-                            {/* Mark Attendance (Tutor only) */}
-                            {user?.role === 'tutor' && session.status === 'approved' && (
+                            {/* Mark Attendance (Tutor only) - Show for approved and completed sessions */}
+                            {user?.role === 'tutor' && (session.status === 'approved' || session.status === 'completed') && (
                                 <div className="mt-6 p-4 bg-indigo-50 rounded-lg">
-                                    <h3 className="font-semibold mb-3">Mark Attendance</h3>
+                                    <h3 className="font-semibold mb-3">
+                                        {feedback?.attendanceStatus ? 'Update Attendance' : 'Mark Attendance'}
+                                    </h3>
+                                    {feedback?.attendanceStatus && (
+                                        <div className="mb-3 p-2 bg-white rounded">
+                                            <p className="text-sm text-gray-600">
+                                                Current Status: <span className="font-medium capitalize">{feedback.attendanceStatus}</span>
+                                            </p>
+                                            {feedback.duration && (
+                                                <p className="text-sm text-gray-600">
+                                                    Duration: {feedback.duration} minutes
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
                                     <form onSubmit={handleMarkAttendance} className="space-y-3">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -323,18 +378,34 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                 <div className="p-4 bg-blue-50 rounded-lg">
                                     <h3 className="font-semibold mb-3">Session Summary (Tutor)</h3>
                                     {feedback?.tutorSummary ? (
-                                        <div className="space-y-2">
-                                            <p className="text-sm text-gray-700">{feedback.tutorSummary}</p>
-                                            {feedback.understandingScore && (
-                                                <p className="text-sm">
-                                                    Understanding: {feedback.understandingScore}/5
-                                                </p>
-                                            )}
-                                            {feedback.topicsCovered && feedback.topicsCovered.length > 0 && (
-                                                <p className="text-sm">
-                                                    Topics: {feedback.topicsCovered.join(', ')}
-                                                </p>
-                                            )}
+                                        <div className="space-y-3">
+                                            <div className="space-y-2">
+                                                <p className="text-sm text-gray-700">{feedback.tutorSummary}</p>
+                                                {feedback.understandingScore && (
+                                                    <p className="text-sm">
+                                                        Understanding: {feedback.understandingScore}/5
+                                                    </p>
+                                                )}
+                                                {feedback.topicsCovered && feedback.topicsCovered.length > 0 && (
+                                                    <p className="text-sm">
+                                                        Topics: {feedback.topicsCovered.join(', ')}
+                                                    </p>
+                                                )}
+                                                {feedback.nextSteps && (
+                                                    <p className="text-sm">
+                                                        <strong>Next Steps:</strong> {feedback.nextSteps}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    // Allow editing by resetting feedback display
+                                                    setFeedback({ ...feedback, tutorSummary: null });
+                                                }}
+                                                className="text-sm text-indigo-600 hover:text-indigo-800 underline"
+                                            >
+                                                Edit Feedback
+                                            </button>
                                         </div>
                                     ) : (
                                         <form onSubmit={handleSubmitTutorFeedback} className="space-y-3">
@@ -466,13 +537,13 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                             </label>
                                             <select
                                                 value={studyMaterial.type}
-                                                onChange={(e) => setStudyMaterial({ ...studyMaterial, type: e.target.value })}
+                                                onChange={(e) => setStudyMaterial({ ...studyMaterial, type: e.target.value, file: null, url: '' })}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                                 required
                                             >
                                                 <option value="topic">Topic</option>
                                                 <option value="link">Link</option>
-                                                <option value="file">File Reference</option>
+                                                <option value="file">Upload File</option>
                                             </select>
                                         </div>
                                         <div>
@@ -497,7 +568,26 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                                     value={studyMaterial.url}
                                                     onChange={(e) => setStudyMaterial({ ...studyMaterial, url: e.target.value })}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                    placeholder="https://example.com"
                                                 />
+                                            </div>
+                                        )}
+                                        {studyMaterial.type === 'file' && (
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Upload File
+                                                </label>
+                                                <input
+                                                    type="file"
+                                                    onChange={handleFileChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                                                />
+                                                {studyMaterial.file && (
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        Selected: {studyMaterial.file.name}
+                                                    </p>
+                                                )}
                                             </div>
                                         )}
                                         <div>
@@ -513,9 +603,10 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                         </div>
                                         <button
                                             type="submit"
-                                            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                                            disabled={uploadingFile}
+                                            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
-                                            Add Material
+                                            {uploadingFile ? 'Uploading...' : 'Add Material'}
                                         </button>
                                     </form>
                                 </div>
