@@ -358,9 +358,9 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                         </div>
                                         <button
                                             type="submit"
-                                            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                                            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
                                         >
-                                            Mark Attendance
+                                            {feedback?.attendanceStatus ? 'Update Attendance' : 'Mark Attendance'}
                                         </button>
                                     </form>
                                 </div>
@@ -376,39 +376,36 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                             {/* Tutor Feedback */}
                             {user?.role === 'tutor' && (
                                 <div className="p-4 bg-blue-50 rounded-lg">
-                                    <h3 className="font-semibold mb-3">Session Summary (Tutor)</h3>
-                                    {feedback?.tutorSummary ? (
-                                        <div className="space-y-3">
-                                            <div className="space-y-2">
-                                                <p className="text-sm text-gray-700">{feedback.tutorSummary}</p>
-                                                {feedback.understandingScore && (
-                                                    <p className="text-sm">
-                                                        Understanding: {feedback.understandingScore}/5
-                                                    </p>
-                                                )}
-                                                {feedback.topicsCovered && feedback.topicsCovered.length > 0 && (
-                                                    <p className="text-sm">
-                                                        Topics: {feedback.topicsCovered.join(', ')}
-                                                    </p>
-                                                )}
-                                                {feedback.nextSteps && (
-                                                    <p className="text-sm">
-                                                        <strong>Next Steps:</strong> {feedback.nextSteps}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <button
-                                                onClick={() => {
-                                                    // Allow editing by resetting feedback display
-                                                    setFeedback({ ...feedback, tutorSummary: null });
-                                                }}
-                                                className="text-sm text-indigo-600 hover:text-indigo-800 underline"
-                                            >
-                                                Edit Feedback
-                                            </button>
+                                    <h3 className="font-semibold mb-3">
+                                        Session Summary (Tutor)
+                                        {feedback?.tutorSummary && (
+                                            <span className="ml-2 text-xs text-gray-500 font-normal">
+                                                (You can edit and update)
+                                            </span>
+                                        )}
+                                    </h3>
+                                    {feedback?.tutorSummary && (
+                                        <div className="mb-4 p-3 bg-white rounded border border-blue-200">
+                                            <p className="text-xs text-gray-500 mb-2">Current Feedback:</p>
+                                            <p className="text-sm text-gray-700 mb-2">{feedback.tutorSummary}</p>
+                                            {feedback.understandingScore && (
+                                                <p className="text-xs text-gray-600">
+                                                    Understanding: {feedback.understandingScore}/5
+                                                </p>
+                                            )}
+                                            {feedback.topicsCovered && feedback.topicsCovered.length > 0 && (
+                                                <p className="text-xs text-gray-600">
+                                                    Topics: {feedback.topicsCovered.join(', ')}
+                                                </p>
+                                            )}
+                                            {feedback.nextSteps && (
+                                                <p className="text-xs text-gray-600 mt-1">
+                                                    <strong>Next Steps:</strong> {feedback.nextSteps}
+                                                </p>
+                                            )}
                                         </div>
-                                    ) : (
-                                        <form onSubmit={handleSubmitTutorFeedback} className="space-y-3">
+                                    )}
+                                    <form onSubmit={handleSubmitTutorFeedback} className="space-y-3">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                                     Session Summary
@@ -460,30 +457,37 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                             </div>
                                             <button
                                                 type="submit"
-                                                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                                             >
-                                                Submit Feedback
+                                                {feedback?.tutorSummary ? 'Update Feedback' : 'Submit Feedback'}
                                             </button>
                                         </form>
-                                    )}
                                 </div>
                             )}
 
                             {/* Student Feedback */}
                             {user?.role === 'student' && (
                                 <div className="p-4 bg-green-50 rounded-lg">
-                                    <h3 className="font-semibold mb-3">Your Feedback</h3>
-                                    {feedback?.studentRating ? (
-                                        <div className="space-y-2">
+                                    <h3 className="font-semibold mb-3">
+                                        Your Feedback
+                                        {feedback?.studentRating && (
+                                            <span className="ml-2 text-xs text-gray-500 font-normal">
+                                                (You can edit and update)
+                                            </span>
+                                        )}
+                                    </h3>
+                                    {feedback?.studentRating && (
+                                        <div className="mb-4 p-3 bg-white rounded border border-green-200">
+                                            <p className="text-xs text-gray-500 mb-2">Current Feedback:</p>
                                             <p className="text-sm">
                                                 Rating: {feedback.studentRating}/5 ⭐
                                             </p>
                                             {feedback.studentComment && (
-                                                <p className="text-sm text-gray-700">{feedback.studentComment}</p>
+                                                <p className="text-sm text-gray-700 mt-2">{feedback.studentComment}</p>
                                             )}
                                         </div>
-                                    ) : (
-                                        <form onSubmit={handleSubmitStudentFeedback} className="space-y-3">
+                                    )}
+                                    <form onSubmit={handleSubmitStudentFeedback} className="space-y-3">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                                     Rating (1-5)
@@ -511,12 +515,11 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                             </div>
                                             <button
                                                 type="submit"
-                                                className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                                                className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                                             >
-                                                Submit Feedback
+                                                {feedback?.studentRating ? 'Update Feedback' : 'Submit Feedback'}
                                             </button>
                                         </form>
-                                    )}
                                 </div>
                             )}
                         </div>

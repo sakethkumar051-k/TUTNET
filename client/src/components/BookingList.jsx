@@ -5,14 +5,16 @@ import ReviewForm from './ReviewForm';
 import LoadingSkeleton from './LoadingSkeleton';
 import EmptyState from './EmptyState';
 import ConfirmationModal from './ConfirmationModal';
+import SessionDetailsModal from './SessionDetailsModal';
 
 const BookingList = ({ role }) => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const [sessionDetailsModalOpen, setSessionDetailsModalOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState(null);
-    const [confirmModal, setConfirmModal] = useState({ open: false, action: null, bookingId: null });
+    const [confirmModal, setConfirmModal] = useState({ open: false, action: null, bookingId: null, openSessionModal: false });
     const { showSuccess, showError } = useToast();
 
     const fetchBookings = async () => {
@@ -64,13 +66,19 @@ const BookingList = ({ role }) => {
     };
 
     const handleComplete = (id) => {
+        const booking = bookings.find(b => b._id === id);
         setConfirmModal({
             open: true,
             action: async () => {
                 try {
                     await api.patch(`/bookings/${id}/complete`);
-                    fetchBookings();
+                    await fetchBookings();
                     showSuccess('Booking marked as completed!');
+                    // Open session details modal after marking complete
+                    if (booking) {
+                        setSelectedBooking(booking);
+                        setSessionDetailsModalOpen(true);
+                    }
                 } catch (err) {
                     console.error(err);
                     showError('Failed to complete booking');
@@ -78,10 +86,22 @@ const BookingList = ({ role }) => {
             },
             bookingId: id,
             title: 'Mark as Completed',
-            message: 'Mark this booking as completed? The student will be able to leave a review.',
+            message: 'Mark this booking as completed? You can then add attendance, feedback, and assign homework.',
             confirmText: 'Mark Complete',
-            confirmColor: 'blue'
+            confirmColor: 'blue',
+            openSessionModal: true
         });
+    };
+
+    const openSessionDetails = (booking) => {
+        setSelectedBooking(booking);
+        setSessionDetailsModalOpen(true);
+    };
+
+    const closeSessionDetails = () => {
+        setSessionDetailsModalOpen(false);
+        setSelectedBooking(null);
+        fetchBookings();
     };
 
     const handleCancel = (id) => {
@@ -227,6 +247,14 @@ const BookingList = ({ role }) => {
                                                             ✓ Mark Complete
                                                         </button>
                                                     )}
+                                                    {(booking.status === 'completed' || booking.status === 'approved') && (
+                                                        <button
+                                                            onClick={() => openSessionDetails(booking)}
+                                                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                                                        >
+                                                            📝 {booking.status === 'completed' ? 'Edit Session' : 'View Session'}
+                                                        </button>
+                                                    )}
                                                 </>
                                             )}
                                         </div>
@@ -273,9 +301,20 @@ const BookingList = ({ role }) => {
                     confirmColor={confirmModal.confirmColor || 'red'}
                     onConfirm={() => {
                         confirmModal.action();
-                        setConfirmModal({ open: false, action: null, bookingId: null });
+                        setConfirmModal({ open: false, action: null, bookingId: null, openSessionModal: false });
                     }}
-                    onCancel={() => setConfirmModal({ open: false, action: null, bookingId: null })}
+                    onCancel={() => setConfirmModal({ open: false, action: null, bookingId: null, openSessionModal: false })}
+                />
+            )}
+
+            {/* Session Details Modal */}
+            {sessionDetailsModalOpen && selectedBooking && (
+                <SessionDetailsModal
+                    session={selectedBooking}
+                    onClose={closeSessionDetails}
+                    onUpdate={() => {
+                        fetchBookings();
+                    }}
                 />
             )}
         </>
