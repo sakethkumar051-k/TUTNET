@@ -120,6 +120,100 @@ const Home = () => {
                 </div>
             </div>
 
+            {/* Empowering Through Accessibility Section */}
+            <div className="py-16 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+                            Empowering Through Accessibility
+                        </h2>
+                        <p className="mt-4 max-w-3xl mx-auto text-lg text-gray-600 leading-relaxed">
+                            At Tutnet, we integrate user-friendly features and industry best practices, ensuring every learner unlocks the transformative potential of our services.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+                        {/* Tailored Tutor Matching */}
+                        <div className="bg-white rounded-2xl p-8 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-indigo-300">
+                            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 mb-6">
+                                <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">Tailored Tutor Matching</h3>
+                            <p className="text-gray-600 leading-relaxed">
+                                Tailored learning experiences with our certified tutors.
+                            </p>
+                        </div>
+
+                        {/* Flexible Learning Options */}
+                        <div className="bg-white rounded-2xl p-8 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-indigo-300">
+                            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 mb-6">
+                                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">Flexible Learning Options</h3>
+                            <p className="text-gray-600 leading-relaxed">
+                                Empower education through the convenience of home, online, and engaging short courses.
+                            </p>
+                        </div>
+
+                        {/* Expert & Certified Tutors */}
+                        <div className="bg-white rounded-2xl p-8 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-indigo-300">
+                            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 mb-6">
+                                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">Expert & Certified Tutors</h3>
+                            <p className="text-gray-600 leading-relaxed">
+                                Quality education assured by our passionate tutors with recognized certifications.
+                            </p>
+                        </div>
+
+                        {/* Learning Insights */}
+                        <div className="bg-white rounded-2xl p-8 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-indigo-300">
+                            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 mb-6">
+                                <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">Learning Insights</h3>
+                            <p className="text-gray-600 leading-relaxed">
+                                Gain valuable insights effortlessly for a clearer understanding of your child's academic journey.
+                            </p>
+                        </div>
+
+                        {/* Affordable Pricing */}
+                        <div className="bg-white rounded-2xl p-8 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-indigo-300">
+                            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 mb-6">
+                                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">Affordable Pricing</h3>
+                            <p className="text-gray-600 leading-relaxed">
+                                Access quality tutoring that seamlessly fits your budget, ensuring excellence without compromise.
+                            </p>
+                        </div>
+
+                        {/* Support */}
+                        <div className="bg-white rounded-2xl p-8 border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-indigo-300">
+                            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-100 to-pink-100 mb-6">
+                                <svg className="w-8 h-8 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">Support</h3>
+                            <p className="text-gray-600 leading-relaxed">
+                                Feel supported with round-the-clock assistance—your dedicated educational partner.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* How it Works Section */}
             <div className="py-16 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
