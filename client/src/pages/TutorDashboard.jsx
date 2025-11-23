@@ -140,8 +140,8 @@ const TutorDashboard = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-            <div className="px-4 py-6 sm:px-0">
+        <div className="min-h-screen bg-gray-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div className="mb-6 flex items-start justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Tutor Dashboard</h1>
@@ -154,8 +154,8 @@ const TutorDashboard = () => {
 
                 {/* Approval Status Alert */}
                 {stats && stats.approvalStatus === 'pending' && (
-                    <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                        <div className="flex">
+                    <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                        <div className="flex items-center">
                             <div className="flex-shrink-0">
                                 <span className="text-yellow-400 text-xl">⚠️</span>
                             </div>
@@ -169,29 +169,35 @@ const TutorDashboard = () => {
                 )}
 
                 {/* Statistics */}
-                {!loading && stats && <DashboardStats stats={dashboardStats} />}
+                {!loading && stats && (
+                    <div className="mb-6">
+                        <DashboardStats stats={dashboardStats} />
+                    </div>
+                )}
 
                 {/* Tabs Navigation */}
-                <div className="border-b border-gray-200 mb-6">
-                    <nav className="-mb-px flex space-x-8">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`${activeTab === tab.id
-                                        ? 'border-indigo-500 text-indigo-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
-                            >
-                                <span>{tab.icon}</span>
-                                {tab.label}
-                            </button>
-                        ))}
-                    </nav>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                    <div className="border-b border-gray-200">
+                        <nav className="flex overflow-x-auto scrollbar-hide -mb-px">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`${activeTab === tab.id
+                                            ? 'border-indigo-500 text-indigo-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                        } whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                >
+                                    <span>{tab.icon}</span>
+                                    <span className="hidden sm:inline">{tab.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    </div>
                 </div>
 
                 {/* Tab Content */}
-                <div className="mt-6">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     {activeTab === 'today' && <TodaysSessions />}
                     {activeTab === 'current-students' && <MyCurrentStudents />}
                     {activeTab === 'sessions' && <SessionManagementDashboard />}

@@ -17,13 +17,13 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="bg-gray-50 border-b border-gray-200">
+        <nav className="bg-gray-50 border-b border-gray-200 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     {/* Left: Logo and Navigation */}
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-4">
                         {/* Logo */}
-                        <Link to="/" className="flex items-center hover:opacity-80 transition-opacity mr-6">
+                        <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
                             <img
                                 src="/tutnet-logo.png"
                                 alt="Tutnet Logo"
@@ -32,7 +32,7 @@ const Navbar = () => {
                         </Link>
 
                         {/* Navigation Links - Show for all users */}
-                        <div className="hidden md:flex items-center space-x-2">
+                        <div className="hidden md:flex items-center space-x-1">
                             <Link
                                 to="/"
                                 className="px-4 py-1.5 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-full transition-colors"
@@ -79,12 +79,12 @@ const Navbar = () => {
                     <div className="flex items-center space-x-3">
                         {user ? (
                             <>
-                                <span className="hidden md:block text-sm text-gray-600">
+                                <span className="hidden md:block text-sm text-gray-600 px-3">
                                     <span className="font-medium">{user.name}</span>
                                 </span>
                                 <button
                                     onClick={handleLogout}
-                                    className="px-5 py-1.5 text-sm font-medium text-gray-700 hover:text-purple-600 border border-gray-300 rounded-full transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 border border-gray-300 rounded-full transition-colors flex items-center justify-center"
                                 >
                                     Logout
                                 </button>
@@ -93,13 +93,13 @@ const Navbar = () => {
                             <>
                                 <Link
                                     to="/login"
-                                    className="px-5 py-1.5 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors flex items-center justify-center"
                                 >
                                     Login
                                 </Link>
                                 <Link
                                     to="/register"
-                                    className="px-5 py-1.5 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-full transition-colors shadow-sm"
+                                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-full transition-colors shadow-sm flex items-center justify-center"
                                 >
                                     Sign up
                                 </Link>
