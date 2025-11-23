@@ -142,7 +142,7 @@ const TutorDashboard = () => {
     return (
         <div className="h-screen bg-gray-50 flex overflow-hidden">
             {/* Left Sidebar Navigation */}
-            <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full fixed left-0 top-16 z-40">
+            <div className="w-64 bg-white border-r border-gray-200 flex flex-col fixed left-0 top-16 bottom-0 z-40">
                 <div className="p-4 border-b border-gray-200 flex-shrink-0">
                     <h1 className="text-xl font-bold text-gray-900">Tutor Dashboard</h1>
                     <p className="text-xs text-gray-500 mt-1">
