@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
+    const [searchParams] = useSearchParams();
     const [role, setRole] = useState('student');
     const [formData, setFormData] = useState({
         email: '',
@@ -12,6 +13,14 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const redirect = searchParams.get('redirect');
+        if (redirect) {
+            // Store redirect for after login
+            sessionStorage.setItem('redirectAfterLogin', redirect);
+        }
+    }, [searchParams]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -32,11 +41,18 @@ const Login = () => {
                 return;
             }
 
-            // Navigate based on role
-            if (role === 'tutor') {
-                navigate('/tutor-dashboard');
+            // Check for redirect
+            const redirect = sessionStorage.getItem('redirectAfterLogin');
+            if (redirect) {
+                sessionStorage.removeItem('redirectAfterLogin');
+                navigate(redirect);
             } else {
-                navigate('/student-dashboard');
+                // Navigate based on role
+                if (role === 'tutor') {
+                    navigate('/tutor-dashboard');
+                } else {
+                    navigate('/student-dashboard');
+                }
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed');

@@ -66,27 +66,28 @@ const TutorCard = ({ tutor, onBook }) => {
     return (
         <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
             {/* Header with Gradient */}
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
-                <div className="flex items-start justify-between text-white">
-                    <div className="flex-1">
-                        <h3 className="text-xl font-bold mb-1">
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-4 sm:px-6 py-4">
+                <div className="flex items-start justify-between text-white gap-2">
+                    <div className="flex-1 min-w-0">
+                        <h3 className="text-lg sm:text-xl font-bold mb-1 truncate">
                             {tutor.userId?.name}
                         </h3>
-                        <p className="text-indigo-100 text-sm flex items-center gap-1">
+                        <p className="text-indigo-100 text-xs sm:text-sm flex items-center gap-1 truncate">
                             📍 {tutor.userId?.location?.area}, {tutor.userId?.location?.city || 'Hyderabad'}
                         </p>
                     </div>
 
                     {/* Rating Badge & Favorite */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                         {user?.role === 'student' && !checkingFavorite && (
                             <button
                                 onClick={toggleFavorite}
-                                className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-2 hover:bg-opacity-30 transition-colors"
+                                className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 hover:bg-opacity-30 transition-colors"
                                 title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                                aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                             >
                                 <svg
-                                    className={`w-5 h-5 ${isFavorite ? 'text-yellow-300 fill-current' : 'text-white'}`}
+                                    className={`w-4 h-4 sm:w-5 sm:h-5 ${isFavorite ? 'text-yellow-300 fill-current' : 'text-white'}`}
                                     fill={isFavorite ? 'currentColor' : 'none'}
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -96,12 +97,12 @@ const TutorCard = ({ tutor, onBook }) => {
                             </button>
                         )}
                         {reviewCount > 0 && (
-                            <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 text-center">
-                                <div className="flex items-center gap-1">
-                                    <span className="text-yellow-300 text-lg">★</span>
-                                    <span className="font-bold text-lg">{averageRating.toFixed(1)}</span>
+                            <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-center">
+                                <div className="flex items-center gap-0.5 sm:gap-1">
+                                    <span className="text-yellow-300 text-sm sm:text-lg">★</span>
+                                    <span className="font-bold text-sm sm:text-lg">{averageRating.toFixed(1)}</span>
                                 </div>
-                                <p className="text-xs text-indigo-100">{reviewCount} reviews</p>
+                                <p className="text-[10px] sm:text-xs text-indigo-100">{reviewCount} reviews</p>
                             </div>
                         )}
                     </div>
@@ -109,21 +110,21 @@ const TutorCard = ({ tutor, onBook }) => {
             </div>
 
             {/* Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
                 {/* Subjects */}
-                <div className="mb-4">
-                    <p className="text-sm font-semibold text-gray-700 mb-2">Subjects</p>
-                    <div className="flex flex-wrap gap-2">
+                <div className="mb-3 sm:mb-4">
+                    <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">Subjects</p>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {tutor.subjects?.slice(0, 4).map((subject, index) => (
                             <span
                                 key={index}
-                                className={`px-3 py-1 rounded-full text-xs font-medium ${getSubjectColor(index)}`}
+                                className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium ${getSubjectColor(index)}`}
                             >
                                 {subject}
                             </span>
                         ))}
                         {tutor.subjects?.length > 4 && (
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            <span className="px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium bg-gray-100 text-gray-600">
                                 +{tutor.subjects.length - 4} more
                             </span>
                         )}
@@ -131,35 +132,35 @@ const TutorCard = ({ tutor, onBook }) => {
                 </div>
 
                 {/* Classes */}
-                <div className="mb-4">
-                    <p className="text-sm font-semibold text-gray-700 mb-2">Classes</p>
-                    <p className="text-sm text-gray-600">{tutor.classes?.join(', ')}</p>
+                <div className="mb-3 sm:mb-4">
+                    <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Classes</p>
+                    <p className="text-xs sm:text-sm text-gray-600">{tutor.classes?.join(', ')}</p>
                 </div>
 
                 {/* Info Grid */}
-                <div className="grid grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
                     <div>
-                        <p className="text-xs text-gray-500 mb-1">Hourly Rate</p>
-                        <p className="text-lg font-bold text-indigo-600">₹{tutor.hourlyRate}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Hourly Rate</p>
+                        <p className="text-base sm:text-lg font-bold text-indigo-600">₹{tutor.hourlyRate}</p>
                     </div>
                     <div>
-                        <p className="text-xs text-gray-500 mb-1">Experience</p>
-                        <p className="text-lg font-bold text-gray-900">{tutor.experienceYears} years</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Experience</p>
+                        <p className="text-base sm:text-lg font-bold text-gray-900">{tutor.experienceYears} years</p>
                     </div>
                 </div>
 
                 {/* Bio */}
                 {tutor.bio && (
-                    <div className="mb-4">
+                    <div className="mb-3 sm:mb-4">
                         <p className="text-xs font-semibold text-gray-700 mb-1">About</p>
-                        <p className="text-sm text-gray-600 line-clamp-2">{tutor.bio}</p>
+                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{tutor.bio}</p>
                     </div>
                 )}
 
                 {/* Book Button */}
                 <button
                     onClick={() => onBook(tutor)}
-                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md"
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-2.5 sm:py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-sm sm:text-base"
                 >
                     Book Now
                 </button>

@@ -1,8 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 
 const BookingForm = ({ tutorId, tutorName, onClose, onSuccess }) => {
+    const { user } = useAuth();
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         subject: '',
         preferredSchedule: '',
@@ -16,6 +20,20 @@ const BookingForm = ({ tutorId, tutorName, onClose, onSuccess }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Check authentication
+        if (!user) {
+            showError('Please sign in to book a tutor');
+            navigate('/login?redirect=/');
+            onClose();
+            return;
+        }
+
+        if (user.role !== 'student') {
+            showError('Only students can book tutors');
+            onClose();
+            return;
+        }
         
         // Validation
         if (!formData.subject.trim()) {

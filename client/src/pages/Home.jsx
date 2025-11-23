@@ -1,8 +1,52 @@
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
+import TutorCard from '../components/TutorCard';
+import BookingForm from '../components/BookingForm';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import { useToast } from '../context/ToastContext';
 
 const Home = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
+    const { showSuccess } = useToast();
+    const [featuredTutors, setFeaturedTutors] = useState([]);
+    const [loadingTutors, setLoadingTutors] = useState(true);
+    const [selectedTutor, setSelectedTutor] = useState(null);
+
+    useEffect(() => {
+        fetchFeaturedTutors();
+    }, []);
+
+    const fetchFeaturedTutors = async () => {
+        try {
+            const { data } = await api.get('/tutors?limit=6');
+            setFeaturedTutors(data);
+        } catch (err) {
+            console.error('Error fetching tutors:', err);
+        } finally {
+            setLoadingTutors(false);
+        }
+    };
+
+    const handleBookingSuccess = () => {
+        showSuccess('Booking request sent successfully!');
+        setSelectedTutor(null);
+    };
+
+    const handleBookClick = (tutor) => {
+        if (!user) {
+            // Redirect to login with return path
+            navigate('/login?redirect=/');
+            return;
+        }
+        if (user.role !== 'student') {
+            showSuccess('Please login as a student to book tutors');
+            return;
+        }
+        setSelectedTutor(tutor);
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -22,19 +66,19 @@ const Home = () => {
                                     Connect with qualified, verified tutors in West Hyderabad. Get personalized, one-on-one learning in the comfort of your home.
                                 </p>
                                 {!user && (
-                                    <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
+                                    <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8 gap-3">
                                         <div className="rounded-xl shadow">
                                             <Link
                                                 to="/register"
-                                                className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 md:py-4 md:text-lg md:px-10 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-indigo-500/50"
+                                                className="w-full flex items-center justify-center px-6 py-3 sm:px-8 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 md:py-4 md:text-lg md:px-10 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-indigo-500/50"
                                             >
                                                 Get Started
                                             </Link>
                                         </div>
-                                        <div className="mt-3 rounded-xl shadow sm:mt-0 sm:ml-3">
+                                        <div className="mt-3 rounded-xl shadow sm:mt-0">
                                             <Link
                                                 to="/login"
-                                                className="w-full flex items-center justify-center px-8 py-3 border border-gray-300 text-base font-medium rounded-xl text-indigo-700 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10 transition-all duration-300"
+                                                className="w-full flex items-center justify-center px-6 py-3 sm:px-8 border border-gray-300 text-base font-medium rounded-xl text-indigo-700 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10 transition-all duration-300"
                                             >
                                                 Sign In
                                             </Link>
@@ -53,7 +97,7 @@ const Home = () => {
             {/* Stats Section */}
             <div className="bg-white">
                 <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                         <div className="bg-gradient-to-br from-indigo-50 to-purple-50 overflow-hidden rounded-2xl border border-indigo-100">
                             <div className="px-4 py-5 sm:p-6">
                                 <dt className="text-sm font-medium text-gray-500 truncate">Verified Tutors</dt>
@@ -89,8 +133,8 @@ const Home = () => {
                         </p>
                     </div>
 
-                    <div className="mt-16">
-                        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                    <div className="mt-12 sm:mt-16">
+                        <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
                             <div className="relative group">
                                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
                                 <div className="relative bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
@@ -144,8 +188,8 @@ const Home = () => {
                         </p>
                     </div>
 
-                    <div className="mt-16">
-                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="mt-12 sm:mt-16">
+                        <div className="grid grid-cols-1 gap-6 sm:gap-8 sm:grid-cols-2 lg:grid-cols-3">
                             <div className="pt-6">
                                 <div className="flow-root bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl px-6 pb-8 border border-indigo-100 hover:shadow-lg transition-shadow duration-300">
                                     <div className="-mt-6">
@@ -199,34 +243,98 @@ const Home = () => {
                 </div>
             </div>
 
+            {/* Featured Tutors Section */}
+            <div className="py-16 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">Browse Tutors</h2>
+                        <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                            Find Your Perfect Tutor
+                        </p>
+                        <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
+                            Browse our verified tutors and start your learning journey today
+                        </p>
+                        {!user && (
+                            <p className="mt-2 text-sm text-gray-500">
+                                Sign up or sign in to book a session
+                            </p>
+                        )}
+                    </div>
+
+                    {loadingTutors ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <LoadingSkeleton type="card" count={6} />
+                        </div>
+                    ) : featuredTutors.length === 0 ? (
+                        <div className="text-center py-12">
+                            <p className="text-gray-500">No tutors available at the moment. Check back later!</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                                {featuredTutors.map(tutor => (
+                                    <TutorCard
+                                        key={tutor._id}
+                                        tutor={tutor}
+                                        onBook={() => handleBookClick(tutor)}
+                                    />
+                                ))}
+                            </div>
+                            <div className="text-center">
+                                <Link
+                                    to="/student-dashboard?tab=find-tutors"
+                                    className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-indigo-500/50"
+                                >
+                                    {user ? 'View All Tutors' : 'Sign Up to View All Tutors'}
+                                </Link>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+
             {/* CTA Section */}
             {!user && (
                 <div className="bg-gradient-to-r from-indigo-600 to-purple-600">
-                    <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-                        <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-                            <span className="block">Ready to get started?</span>
-                            <span className="block text-indigo-200">Join Tutnet today.</span>
-                        </h2>
-                        <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-                            <div className="inline-flex rounded-xl shadow">
-                                <Link
-                                    to="/register"
-                                    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-xl text-indigo-600 bg-white hover:bg-indigo-50 transition-colors duration-300"
-                                >
-                                    Get started
-                                </Link>
+                    <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
+                        <div className="lg:flex lg:items-center lg:justify-between">
+                            <div className="text-center lg:text-left mb-8 lg:mb-0">
+                                <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                                    <span className="block">Ready to get started?</span>
+                                    <span className="block text-indigo-200">Join Tutnet today.</span>
+                                </h2>
                             </div>
-                            <div className="ml-3 inline-flex rounded-xl shadow">
-                                <Link
-                                    to="/login"
-                                    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-700 hover:bg-indigo-800 transition-colors duration-300"
-                                >
-                                    Sign in
-                                </Link>
+                            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-end lg:flex-shrink-0">
+                                <div className="inline-flex rounded-xl shadow">
+                                    <Link
+                                        to="/register"
+                                        className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-indigo-600 bg-white hover:bg-indigo-50 transition-colors duration-300"
+                                    >
+                                        Get started
+                                    </Link>
+                                </div>
+                                <div className="inline-flex rounded-xl shadow">
+                                    <Link
+                                        to="/login"
+                                        className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-700 hover:bg-indigo-800 transition-colors duration-300"
+                                    >
+                                        Sign in
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Booking Modal */}
+            {selectedTutor && user && (
+                <BookingForm
+                    tutorId={selectedTutor.userId?._id}
+                    tutorName={selectedTutor.userId?.name}
+                    onClose={() => setSelectedTutor(null)}
+                    onSuccess={handleBookingSuccess}
+                />
             )}
         </div>
     );
