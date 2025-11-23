@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const TutorProfile = require('../models/TutorProfile');
 const User = require('../models/User');
+const CurrentTutor = require('../models/CurrentTutor');
 
 // @desc    Create a new booking
 // @route   POST /api/bookings
@@ -21,11 +22,24 @@ const createBooking = async (req, res) => {
             return res.status(400).json({ message: 'Tutor is not available for booking' });
         }
 
+        // Parse session date from preferredSchedule if it's a date string
+        let sessionDate = null;
+        try {
+            // Try to parse date from preferredSchedule
+            const dateMatch = preferredSchedule.match(/\d{4}-\d{2}-\d{2}/);
+            if (dateMatch) {
+                sessionDate = new Date(dateMatch[0]);
+            }
+        } catch (e) {
+            // If parsing fails, leave as null
+        }
+
         const booking = await Booking.create({
             studentId: req.user.id,
             tutorId,
             subject,
             preferredSchedule,
+            sessionDate: sessionDate,
             status: 'pending'
         });
 
@@ -83,7 +97,17 @@ const cancelBooking = async (req, res) => {
         }
 
         booking.status = 'cancelled';
+        booking.attendanceStatus = 'cancelled';
         await booking.save();
+
+        // Update CurrentTutor stats if relationship exists
+        if (booking.currentTutorId) {
+            const currentTutor = await CurrentTutor.findById(booking.currentTutorId);
+            if (currentTutor) {
+                currentTutor.sessionsCancelled += 1;
+                await currentTutor.save();
+            }
+        }
 
         res.json({ message: 'Booking cancelled', booking });
     } catch (error) {
@@ -113,9 +137,62 @@ const approveBooking = async (req, res) => {
         }
 
         booking.status = 'approved';
+        booking.attendanceStatus = 'scheduled';
+        
+        // Parse session date if not set
+        if (!booking.sessionDate) {
+            try {
+                const dateMatch = booking.preferredSchedule.match(/\d{4}-\d{2}-\d{2}/);
+                if (dateMatch) {
+                    booking.sessionDate = new Date(dateMatch[0]);
+                }
+            } catch (e) {
+                // If parsing fails, use current date
+                booking.sessionDate = new Date();
+            }
+        }
+        
         await booking.save();
 
-        res.json({ message: 'Booking approved', booking });
+        // Create or update CurrentTutor relationship
+        const tutorProfile = await TutorProfile.findOne({ userId: booking.tutorId });
+        let currentTutor = await CurrentTutor.findOne({
+            studentId: booking.studentId,
+            tutorId: booking.tutorId,
+            subject: booking.subject,
+            isActive: true
+        });
+
+        if (!currentTutor) {
+            // Create new relationship
+            currentTutor = await CurrentTutor.create({
+                studentId: booking.studentId,
+                tutorId: booking.tutorId,
+                subject: booking.subject,
+                classGrade: tutorProfile?.classes?.[0] || '',
+                relationshipStartDate: new Date(),
+                status: 'new',
+                totalSessionsBooked: 1,
+                isActive: true
+            });
+        } else {
+            // Update existing relationship
+            currentTutor.totalSessionsBooked += 1;
+            if (currentTutor.status === 'new' && currentTutor.totalSessionsBooked > 0) {
+                currentTutor.status = 'active';
+            }
+            await currentTutor.save();
+        }
+
+        // Link booking to current tutor
+        booking.currentTutorId = currentTutor._id;
+        await booking.save();
+
+        const populatedBooking = await Booking.findById(booking._id)
+            .populate('studentId', 'name email')
+            .populate('tutorId', 'name email');
+
+        res.json({ message: 'Booking approved', booking: populatedBooking });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });
@@ -168,12 +245,26 @@ const completeBooking = async (req, res) => {
             return res.status(401).json({ message: 'Not authorized' });
         }
 
-        if (booking.status !== 'approved') {
-            return res.status(400).json({ message: 'Only approved bookings can be marked as completed' });
+        if (booking.status !== 'approved' && booking.status !== 'scheduled') {
+            return res.status(400).json({ message: 'Only approved or scheduled bookings can be marked as completed' });
         }
 
         booking.status = 'completed';
+        booking.attendanceStatus = 'completed';
         await booking.save();
+
+        // Update CurrentTutor stats
+        if (booking.currentTutorId) {
+            const currentTutor = await CurrentTutor.findById(booking.currentTutorId);
+            if (currentTutor) {
+                currentTutor.sessionsCompleted += 1;
+                // Update status based on completion
+                if (currentTutor.sessionsCompleted >= 10 && currentTutor.sessionsCompleted < 20) {
+                    currentTutor.status = 'near_completion';
+                }
+                await currentTutor.save();
+            }
+        }
 
         res.json({ message: 'Booking marked as completed', booking });
     } catch (error) {

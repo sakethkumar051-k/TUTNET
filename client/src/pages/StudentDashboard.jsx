@@ -9,9 +9,14 @@ import StudyMaterials from '../components/StudyMaterials';
 import FavoriteTutors from '../components/FavoriteTutors';
 import ProgressReports from '../components/ProgressReports';
 import AttendanceTracker from '../components/AttendanceTracker';
+import MyCurrentTutors from '../components/MyCurrentTutors';
+import TodaysSessions from '../components/TodaysSessions';
+import ProgressAnalytics from '../components/ProgressAnalytics';
+import { useSearchParams } from 'react-router-dom';
 
 const StudentDashboard = () => {
-    const [activeTab, setActiveTab] = useState('find-tutors');
+    const [searchParams] = useSearchParams();
+    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'find-tutors');
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
@@ -75,9 +80,11 @@ const StudentDashboard = () => {
     ] : [];
 
     const tabs = [
+        { id: 'today', label: "Today's Classes", icon: '📅' },
+        { id: 'current-tutors', label: 'My Current Tutors', icon: '👨‍🏫' },
         { id: 'find-tutors', label: 'Find Tutors', icon: '🔍' },
         { id: 'favorites', label: 'Favorites', icon: '⭐' },
-        { id: 'my-bookings', label: 'My Bookings', icon: '📅' },
+        { id: 'my-bookings', label: 'My Bookings', icon: '📋' },
         { id: 'study-materials', label: 'Study Materials', icon: '📚' },
         { id: 'progress', label: 'Progress Reports', icon: '📊' },
         { id: 'attendance', label: 'Attendance', icon: '✅' },
@@ -118,11 +125,19 @@ const StudentDashboard = () => {
 
                 {/* Tab Content */}
                 <div className="mt-6">
+                    {activeTab === 'today' && <TodaysSessions />}
+                    {activeTab === 'current-tutors' && <MyCurrentTutors />}
                     {activeTab === 'find-tutors' && <TutorList />}
                     {activeTab === 'favorites' && <FavoriteTutors />}
                     {activeTab === 'my-bookings' && <BookingList role="student" />}
                     {activeTab === 'study-materials' && <StudyMaterials />}
-                    {activeTab === 'progress' && <ProgressReports />}
+                    {activeTab === 'progress' && (
+                        searchParams.get('tutorId') ? (
+                            <ProgressAnalytics />
+                        ) : (
+                            <ProgressReports />
+                        )
+                    )}
                     {activeTab === 'attendance' && <AttendanceTracker />}
                     {activeTab === 'my-reviews' && (
                         <ReviewList studentId={user?._id} />

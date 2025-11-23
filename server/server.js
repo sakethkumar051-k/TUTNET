@@ -53,6 +53,8 @@ try {
     app.use('/api/favorites', require('./routes/favorite.routes'));
     app.use('/api/progress-reports', require('./routes/progressReport.routes'));
     app.use('/api/attendance', require('./routes/attendance.routes'));
+    app.use('/api/current-tutors', require('./routes/currentTutor.routes'));
+    app.use('/api/session-feedback', require('./routes/sessionFeedback.routes'));
     console.log('All routes loaded successfully');
 } catch (error) {
     console.error('Error loading routes:', error);
@@ -69,7 +71,11 @@ app.use((req, res, next) => {
         '/api/auth/reset-password': 'POST',
         '/api/auth/verify-admin': 'POST',
         '/api/bookings': 'POST',
-        '/api/reviews': 'POST'
+        '/api/reviews': 'POST',
+        '/api/current-tutors/student/my-tutors': 'GET',
+        '/api/current-tutors/tutor/my-students': 'GET',
+        '/api/session-feedback/booking/:bookingId/tutor-feedback': 'POST',
+        '/api/session-feedback/booking/:bookingId/student-feedback': 'POST'
     };
 
     const correctMethod = methodMismatch[req.path];
