@@ -306,7 +306,7 @@ const BookingList = ({ role }) => {
             )}
 
             {/* Session Details Modal */}
-            {sessionDetailsModalOpen && selectedBooking && (
+            {sessionDetailsModalOpen && selectedBooking && selectedBooking._id && (
                 <SessionDetailsModal
                     session={selectedBooking}
                     onClose={closeSessionDetails}

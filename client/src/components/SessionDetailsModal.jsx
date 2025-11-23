@@ -40,10 +40,20 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
     });
 
     useEffect(() => {
-        fetchFeedback();
+        if (session && session._id) {
+            fetchFeedback();
+        } else {
+            setLoading(false);
+        }
     }, [session]);
 
     const fetchFeedback = async () => {
+        if (!session || !session._id) {
+            setLoading(false);
+            return;
+        }
+        
+        setLoading(true);
         try {
             const { data } = await api.get(`/session-feedback/booking/${session._id}`);
             setFeedback(data);
@@ -70,12 +80,18 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                 });
             }
         } catch (err) {
-            // Feedback might not exist yet
+            // Feedback might not exist yet - this is okay
+            console.log('No feedback found yet, this is normal for new sessions');
             setFeedback(null);
         } finally {
             setLoading(false);
         }
     };
+
+    // Don't render if no session
+    if (!session) {
+        return null;
+    }
 
     const handleSubmitTutorFeedback = async (e) => {
         e.preventDefault();
@@ -94,6 +110,10 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
 
     const handleSubmitStudentFeedback = async (e) => {
         e.preventDefault();
+        if (!session?._id) {
+            showError('Session ID is missing');
+            return;
+        }
         try {
             await api.post(`/session-feedback/booking/${session._id}/student-feedback`, studentFeedback);
             showSuccess('Feedback submitted successfully');
@@ -113,6 +133,10 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
 
     const handleAddStudyMaterial = async (e) => {
         e.preventDefault();
+        if (!session?._id) {
+            showError('Session ID is missing');
+            return;
+        }
         setUploadingFile(true);
         try {
             let materialData = { ...studyMaterial };
@@ -149,6 +173,10 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
 
     const handleAddHomework = async (e) => {
         e.preventDefault();
+        if (!session?._id) {
+            showError('Session ID is missing');
+            return;
+        }
         try {
             await api.post(`/session-feedback/booking/${session._id}/homework`, homework);
             showSuccess('Homework assigned');
@@ -161,6 +189,10 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
 
     const handleMarkAttendance = async (e) => {
         e.preventDefault();
+        if (!session?._id) {
+            showError('Session ID is missing');
+            return;
+        }
         try {
             await api.post(`/session-feedback/booking/${session._id}/attendance`, attendance);
             showSuccess('Attendance marked');
@@ -183,8 +215,16 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
 
     if (loading) {
         return (
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6">Loading...</div>
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg p-6 shadow-xl">
+                    <div className="flex items-center gap-3">
+                        <svg className="animate-spin h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span className="text-gray-700">Loading session details...</span>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -273,11 +313,11 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-sm font-medium text-gray-500">Subject</p>
-                                    <p className="text-lg text-gray-900">{session.subject}</p>
+                                    <p className="text-lg text-gray-900">{session?.subject || 'N/A'}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-gray-500">Schedule</p>
-                                    <p className="text-lg text-gray-900">{session.preferredSchedule}</p>
+                                    <p className="text-lg text-gray-900">{session?.preferredSchedule || 'N/A'}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-gray-500">
@@ -285,14 +325,14 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                     </p>
                                     <p className="text-lg text-gray-900">
                                         {user?.role === 'student' 
-                                            ? session.tutorId?.name 
-                                            : session.studentId?.name}
+                                            ? (session?.tutorId?.name || session?.tutorId || 'N/A')
+                                            : (session?.studentId?.name || session?.studentId || 'N/A')}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-gray-500">Status</p>
                                     <p className="text-lg text-gray-900 capitalize">
-                                        {session.attendanceStatus || session.status}
+                                        {session?.attendanceStatus || session?.status || 'N/A'}
                                     </p>
                                 </div>
                             </div>
