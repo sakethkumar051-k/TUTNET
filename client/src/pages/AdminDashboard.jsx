@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import api from '../utils/api';
+import AdminAnalytics from '../components/AdminAnalytics';
 
 const AdminDashboard = () => {
     const [pendingTutors, setPendingTutors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [activeTab, setActiveTab] = useState('approvals');
 
     const fetchPendingTutors = async () => {
         setLoading(true);
@@ -51,17 +53,30 @@ const AdminDashboard = () => {
     return (
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">
-                <div className="flex justify-between items-center mb-6">
+                <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-                    <button
-                        onClick={fetchPendingTutors}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                        <svg className="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Refresh
-                    </button>
+                </div>
+
+                {/* Tabs */}
+                <div className="border-b border-gray-200 mb-6">
+                    <nav className="-mb-px flex space-x-8">
+                        {[
+                            { id: 'approvals', label: 'Pending Approvals', icon: '✅' },
+                            { id: 'analytics', label: 'Analytics & Reports', icon: '📊' }
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`${activeTab === tab.id
+                                        ? 'border-indigo-500 text-indigo-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                            >
+                                <span>{tab.icon}</span>
+                                {tab.label}
+                            </button>
+                        ))}
+                    </nav>
                 </div>
 
                 {message.text && (
@@ -70,7 +85,23 @@ const AdminDashboard = () => {
                     </div>
                 )}
 
-                <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                {/* Tab Content */}
+                {activeTab === 'analytics' ? (
+                    <AdminAnalytics />
+                ) : (
+                    <div className="space-y-4">
+                        <div className="flex justify-end">
+                            <button
+                                onClick={fetchPendingTutors}
+                                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                            >
+                                <svg className="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Refresh
+                            </button>
+                        </div>
+                        <div className="bg-white shadow overflow-hidden sm:rounded-md">
                     <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
                         <h3 className="text-lg leading-6 font-medium text-gray-900">
                             Pending Tutor Approvals
@@ -150,7 +181,9 @@ const AdminDashboard = () => {
                             ))}
                         </ul>
                     )}
-                </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

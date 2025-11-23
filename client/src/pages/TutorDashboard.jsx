@@ -5,6 +5,9 @@ import TutorProfileForm from '../components/TutorProfileForm';
 import BookingList from '../components/BookingList';
 import ReviewList from '../components/ReviewList';
 import DashboardStats from '../components/DashboardStats';
+import ProgressReports from '../components/ProgressReports';
+import AttendanceTracker from '../components/AttendanceTracker';
+import StudyMaterials from '../components/StudyMaterials';
 
 const TutorDashboard = () => {
     const [activeTab, setActiveTab] = useState('bookings');
@@ -91,6 +94,9 @@ const TutorDashboard = () => {
     const tabs = [
         { id: 'bookings', label: 'My Bookings', icon: '📅' },
         { id: 'profile', label: 'Edit Profile', icon: '✏️' },
+        { id: 'study-materials', label: 'My Materials', icon: '📚' },
+        { id: 'progress', label: 'Progress Reports', icon: '📊' },
+        { id: 'attendance', label: 'Attendance', icon: '✅' },
         { id: 'reviews', label: 'My Reviews', icon: '⭐' }
     ];
 
@@ -179,6 +185,9 @@ const TutorDashboard = () => {
                 <div className="mt-6">
                     {activeTab === 'bookings' && <BookingList role="tutor" />}
                     {activeTab === 'profile' && <TutorProfileForm />}
+                    {activeTab === 'study-materials' && <StudyMaterials />}
+                    {activeTab === 'progress' && <ProgressReports />}
+                    {activeTab === 'attendance' && <AttendanceTracker />}
                     {activeTab === 'reviews' && (
                         <ReviewList tutorId={user?._id} />
                     )}

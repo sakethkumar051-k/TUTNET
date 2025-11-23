@@ -7,6 +7,10 @@ const {
     getPendingBookings,
     approveBooking,
     rejectBooking,
+    getAnalytics,
+    generateReport,
+    getUserActivity,
+    sendMassCommunication
 } = require('../controllers/admin.controller');
 const { protect } = require('../middleware/auth.middleware');
 const { authorize } = require('../middleware/role.middleware');
@@ -22,5 +26,10 @@ router.patch('/tutors/:id/reject', rejectTutor);
 router.get('/bookings/pending', getPendingBookings);
 router.patch('/bookings/:id/approve', approveBooking);
 router.patch('/bookings/:id/reject', rejectBooking);
+
+router.get('/analytics', getAnalytics);
+router.get('/reports', generateReport);
+router.get('/activity', getUserActivity);
+router.post('/mass-communication', sendMassCommunication);
 
 module.exports = router;

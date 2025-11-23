@@ -49,6 +49,10 @@ try {
     app.use('/api/tutors', require('./routes/tutor.routes'));
     app.use('/api/bookings', require('./routes/booking.routes'));
     app.use('/api/reviews', require('./routes/review.routes'));
+    app.use('/api/study-materials', require('./routes/studyMaterial.routes'));
+    app.use('/api/favorites', require('./routes/favorite.routes'));
+    app.use('/api/progress-reports', require('./routes/progressReport.routes'));
+    app.use('/api/attendance', require('./routes/attendance.routes'));
     console.log('All routes loaded successfully');
 } catch (error) {
     console.error('Error loading routes:', error);

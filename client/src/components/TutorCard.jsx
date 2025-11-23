@@ -1,4 +1,52 @@
+import { useState, useEffect } from 'react';
+import api from '../utils/api';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+
 const TutorCard = ({ tutor, onBook }) => {
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [checkingFavorite, setCheckingFavorite] = useState(true);
+    const { user } = useAuth();
+    const { showSuccess, showError } = useToast();
+
+    useEffect(() => {
+        if (user?.role === 'student' && tutor.userId?._id) {
+            checkFavorite();
+        } else {
+            setCheckingFavorite(false);
+        }
+    }, [user, tutor]);
+
+    const checkFavorite = async () => {
+        try {
+            const { data } = await api.get(`/favorites/check/${tutor.userId._id}`);
+            setIsFavorite(data.isFavorite);
+        } catch (err) {
+            // Not a favorite or error
+            setIsFavorite(false);
+        } finally {
+            setCheckingFavorite(false);
+        }
+    };
+
+    const toggleFavorite = async (e) => {
+        e.stopPropagation();
+        if (!user || user.role !== 'student') return;
+
+        try {
+            if (isFavorite) {
+                await api.delete(`/favorites/${tutor.userId._id}`);
+                setIsFavorite(false);
+                showSuccess('Removed from favorites');
+            } else {
+                await api.post('/favorites', { tutorId: tutor.userId._id });
+                setIsFavorite(true);
+                showSuccess('Added to favorites');
+            }
+        } catch (err) {
+            showError('Failed to update favorite');
+        }
+    };
     // Calculate average rating
     const averageRating = tutor.averageRating || 0;
     const reviewCount = tutor.reviewCount || 0;
@@ -29,16 +77,34 @@ const TutorCard = ({ tutor, onBook }) => {
                         </p>
                     </div>
 
-                    {/* Rating Badge */}
-                    {reviewCount > 0 && (
-                        <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 text-center">
-                            <div className="flex items-center gap-1">
-                                <span className="text-yellow-300 text-lg">★</span>
-                                <span className="font-bold text-lg">{averageRating.toFixed(1)}</span>
+                    {/* Rating Badge & Favorite */}
+                    <div className="flex items-center gap-2">
+                        {user?.role === 'student' && !checkingFavorite && (
+                            <button
+                                onClick={toggleFavorite}
+                                className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-2 hover:bg-opacity-30 transition-colors"
+                                title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                            >
+                                <svg
+                                    className={`w-5 h-5 ${isFavorite ? 'text-yellow-300 fill-current' : 'text-white'}`}
+                                    fill={isFavorite ? 'currentColor' : 'none'}
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                </svg>
+                            </button>
+                        )}
+                        {reviewCount > 0 && (
+                            <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 text-center">
+                                <div className="flex items-center gap-1">
+                                    <span className="text-yellow-300 text-lg">★</span>
+                                    <span className="font-bold text-lg">{averageRating.toFixed(1)}</span>
+                                </div>
+                                <p className="text-xs text-indigo-100">{reviewCount} reviews</p>
                             </div>
-                            <p className="text-xs text-indigo-100">{reviewCount} reviews</p>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
 
