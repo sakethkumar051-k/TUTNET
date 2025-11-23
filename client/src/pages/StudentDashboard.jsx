@@ -13,6 +13,7 @@ import MyCurrentTutors from '../components/MyCurrentTutors';
 import TodaysSessions from '../components/TodaysSessions';
 import ProgressAnalytics from '../components/ProgressAnalytics';
 import SessionManagementDashboard from '../components/SessionManagementDashboard';
+import SessionHistory from '../components/SessionHistory';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
@@ -94,6 +95,7 @@ const StudentDashboard = () => {
         { id: 'today', label: "Today's Classes", icon: '📅' },
         { id: 'current-tutors', label: 'My Current Tutors', icon: '👨‍🏫' },
         { id: 'sessions', label: 'Session Management', icon: '📆' },
+        { id: 'session-history', label: 'Session History', icon: '📜' },
         { id: 'find-tutors', label: 'Find Tutors', icon: '🔍' },
         { id: 'favorites', label: 'Favorites', icon: '⭐' },
         { id: 'my-bookings', label: 'My Bookings', icon: '📋' },
@@ -171,6 +173,7 @@ const StudentDashboard = () => {
                     {activeTab === 'today' && <TodaysSessions />}
                     {activeTab === 'current-tutors' && <MyCurrentTutors />}
                     {activeTab === 'sessions' && <SessionManagementDashboard />}
+                    {activeTab === 'session-history' && <SessionHistory />}
                     {activeTab === 'find-tutors' && <TutorList />}
                     {activeTab === 'favorites' && <FavoriteTutors />}
                     {activeTab === 'my-bookings' && <BookingList role="student" />}

@@ -202,10 +202,18 @@ const BookingList = ({ role }) => {
                                                             Cancel
                                                         </button>
                                                     )}
+                                                    {(booking.status === 'completed' || booking.status === 'approved') && (
+                                                        <button
+                                                            onClick={() => openSessionDetails(booking)}
+                                                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                                                        >
+                                                            📝 View Session
+                                                        </button>
+                                                    )}
                                                     {booking.status === 'completed' && !booking.hasReview && (
                                                         <button
                                                             onClick={() => openReviewModal(booking)}
-                                                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                                                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
                                                         >
                                                             ⭐ Leave Review
                                                         </button>
