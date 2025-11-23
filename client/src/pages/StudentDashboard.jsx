@@ -94,36 +94,36 @@ const StudentDashboard = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="flex">
-                {/* Left Sidebar Navigation */}
-                <div className="w-64 bg-white border-r border-gray-200 min-h-screen sticky top-16">
-                    <div className="p-4 border-b border-gray-200">
-                        <h1 className="text-xl font-bold text-gray-900">Student Dashboard</h1>
-                        <p className="text-xs text-gray-500 mt-1">
-                            Welcome, {user?.name}!
-                        </p>
-                    </div>
-                    <nav className="p-2">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
-                                    activeTab === tab.id
-                                        ? 'bg-indigo-50 text-indigo-600 font-semibold border-l-4 border-indigo-600'
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                }`}
-                            >
-                                <span className="text-lg">{tab.icon}</span>
-                                <span className="text-sm">{tab.label}</span>
-                            </button>
-                        ))}
-                    </nav>
+        <div className="h-screen bg-gray-50 flex overflow-hidden">
+            {/* Left Sidebar Navigation */}
+            <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+                <div className="p-4 border-b border-gray-200 flex-shrink-0">
+                    <h1 className="text-xl font-bold text-gray-900">Student Dashboard</h1>
+                    <p className="text-xs text-gray-500 mt-1">
+                        Welcome, {user?.name}!
+                    </p>
                 </div>
+                <nav className="flex-1 overflow-y-auto p-2">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
+                                activeTab === tab.id
+                                    ? 'bg-indigo-50 text-indigo-600 font-semibold border-l-4 border-indigo-600'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                            }`}
+                        >
+                            <span className="text-lg">{tab.icon}</span>
+                            <span className="text-sm">{tab.label}</span>
+                        </button>
+                    ))}
+                </nav>
+            </div>
 
-                {/* Main Content Area */}
-                <div className="flex-1 px-4 sm:px-6 lg:px-8 py-6">
+            {/* Main Content Area */}
+            <div className="flex-1 overflow-y-auto">
+                <div className="px-4 sm:px-6 lg:px-8 py-6">
                     {/* Statistics */}
                     {!loading && stats && (
                         <div className="mb-6">
