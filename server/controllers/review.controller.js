@@ -7,7 +7,7 @@ const TutorProfile = require('../models/TutorProfile');
 // @access  Private (Student)
 const createReview = async (req, res) => {
     try {
-        const { bookingId, rating, comment } = req.body;
+        const { bookingId, tutorId, rating, comment } = req.body;
 
         const booking = await Booking.findById(bookingId);
 
@@ -34,15 +34,15 @@ const createReview = async (req, res) => {
         const review = await Review.create({
             bookingId,
             studentId: req.user.id,
-            tutorId: booking.tutorId,
+            tutorId: tutorId || booking.tutorId,
             rating,
             comment
         });
 
         // Update tutor average rating
-        const tutorProfile = await TutorProfile.findOne({ userId: booking.tutorId });
+        const tutorProfile = await TutorProfile.findOne({ userId: tutorId || booking.tutorId });
         if (tutorProfile) {
-            const reviews = await Review.find({ tutorId: booking.tutorId });
+            const reviews = await Review.find({ tutorId: tutorId || booking.tutorId });
             tutorProfile.totalReviews = reviews.length;
             tutorProfile.averageRating =
                 reviews.reduce((acc, item) => item.rating + acc, 0) / reviews.length;
@@ -63,6 +63,23 @@ const getTutorReviews = async (req, res) => {
     try {
         const reviews = await Review.find({ tutorId: req.params.tutorId })
             .populate('studentId', 'name')
+            .populate('tutorId', 'name')
+            .sort({ createdAt: -1 });
+        res.json(reviews);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Get reviews by a student
+// @route   GET /api/reviews/student/:studentId
+// @access  Private
+const getStudentReviews = async (req, res) => {
+    try {
+        const reviews = await Review.find({ studentId: req.params.studentId })
+            .populate('tutorId', 'name')
+            .populate('studentId', 'name')
             .sort({ createdAt: -1 });
         res.json(reviews);
     } catch (error) {
@@ -73,5 +90,6 @@ const getTutorReviews = async (req, res) => {
 
 module.exports = {
     createReview,
-    getTutorReviews
+    getTutorReviews,
+    getStudentReviews
 };

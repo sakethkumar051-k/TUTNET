@@ -45,7 +45,14 @@ const getTutors = async (req, res) => {
         // Filter by isActive
         tutors = tutors.filter(tutor => tutor.userId && tutor.userId.isActive);
 
-        res.json(tutors);
+        // Add rating information to response
+        const tutorsWithRating = tutors.map(tutor => ({
+            ...tutor.toObject(),
+            averageRating: tutor.averageRating || 0,
+            reviewCount: tutor.totalReviews || 0
+        }));
+
+        res.json(tutorsWithRating);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });

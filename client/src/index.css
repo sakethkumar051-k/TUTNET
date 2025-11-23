@@ -29,6 +29,22 @@
     .animate-shake {
         animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
     }
+
+    @keyframes slide-in {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .animate-slide-in {
+        animation: slide-in 0.3s ease-out;
+    }
 }
 
 :root {

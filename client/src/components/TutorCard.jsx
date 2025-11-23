@@ -1,13 +1,48 @@
 const TutorCard = ({ tutor, onBook }) => {
+    // Calculate average rating
+    const averageRating = tutor.averageRating || 0;
+    const reviewCount = tutor.reviewCount || 0;
+
     return (
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-4">
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-4 hover:shadow-lg transition-shadow">
             <div className="px-4 py-5 sm:px-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    {tutor.userId?.name}
-                </h3>
-                <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                    {tutor.location?.area}, {tutor.location?.city}
-                </p>
+                <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                        <h3 className="text-lg leading-6 font-medium text-gray-900">
+                            {tutor.userId?.name}
+                        </h3>
+                        <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                            {tutor.location?.area}, {tutor.location?.city}
+                        </p>
+                    </div>
+
+                    {/* Rating Display */}
+                    {reviewCount > 0 && (
+                        <div className="flex items-center gap-2 ml-4">
+                            <div className="flex">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <span
+                                        key={star}
+                                        className={`text-lg ${star <= Math.round(averageRating)
+                                                ? 'text-yellow-400'
+                                                : 'text-gray-300'
+                                            }`}
+                                    >
+                                        ★
+                                    </span>
+                                ))}
+                            </div>
+                            <div className="text-sm">
+                                <span className="font-semibold text-gray-900">
+                                    {averageRating.toFixed(1)}
+                                </span>
+                                <span className="text-gray-500 ml-1">
+                                    ({reviewCount})
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
             <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
                 <dl className="sm:divide-y sm:divide-gray-200">
@@ -56,3 +91,4 @@ const TutorCard = ({ tutor, onBook }) => {
 };
 
 export default TutorCard;
+
