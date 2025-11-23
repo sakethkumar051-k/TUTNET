@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useToast } from '../context/ToastContext';
 import api from '../utils/api';
 import ReviewForm from './ReviewForm';
+import LoadingSkeleton from './LoadingSkeleton';
+import EmptyState from './EmptyState';
+import ConfirmationModal from './ConfirmationModal';
 
 const BookingList = ({ role }) => {
     const [bookings, setBookings] = useState([]);
@@ -9,6 +12,7 @@ const BookingList = ({ role }) => {
     const [error, setError] = useState('');
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState(null);
+    const [confirmModal, setConfirmModal] = useState({ open: false, action: null, bookingId: null });
     const { showSuccess, showError } = useToast();
 
     const fetchBookings = async () => {
@@ -38,40 +42,67 @@ const BookingList = ({ role }) => {
         }
     };
 
-    const handleReject = async (id) => {
-        if (!window.confirm('Are you sure you want to reject this booking?')) return;
-        try {
-            await api.patch(`/bookings/${id}/reject`);
-            fetchBookings();
-            showSuccess('Booking rejected');
-        } catch (err) {
-            console.error(err);
-            showError('Failed to reject booking');
-        }
+    const handleReject = (id) => {
+        setConfirmModal({
+            open: true,
+            action: async () => {
+                try {
+                    await api.patch(`/bookings/${id}/reject`);
+                    fetchBookings();
+                    showSuccess('Booking rejected');
+                } catch (err) {
+                    console.error(err);
+                    showError('Failed to reject booking');
+                }
+            },
+            bookingId: id,
+            title: 'Reject Booking',
+            message: 'Are you sure you want to reject this booking? This action cannot be undone.',
+            confirmText: 'Reject',
+            confirmColor: 'red'
+        });
     };
 
-    const handleComplete = async (id) => {
-        if (!window.confirm('Mark this booking as completed? The student will be able to leave a review.')) return;
-        try {
-            await api.patch(`/bookings/${id}/complete`);
-            fetchBookings();
-            showSuccess('Booking marked as completed!');
-        } catch (err) {
-            console.error(err);
-            showError('Failed to complete booking');
-        }
+    const handleComplete = (id) => {
+        setConfirmModal({
+            open: true,
+            action: async () => {
+                try {
+                    await api.patch(`/bookings/${id}/complete`);
+                    fetchBookings();
+                    showSuccess('Booking marked as completed!');
+                } catch (err) {
+                    console.error(err);
+                    showError('Failed to complete booking');
+                }
+            },
+            bookingId: id,
+            title: 'Mark as Completed',
+            message: 'Mark this booking as completed? The student will be able to leave a review.',
+            confirmText: 'Mark Complete',
+            confirmColor: 'blue'
+        });
     };
 
-    const handleCancel = async (id) => {
-        if (!window.confirm('Are you sure you want to cancel this booking?')) return;
-        try {
-            await api.patch(`/bookings/${id}/cancel`);
-            fetchBookings();
-            showSuccess('Booking cancelled');
-        } catch (err) {
-            console.error(err);
-            showError('Failed to cancel booking');
-        }
+    const handleCancel = (id) => {
+        setConfirmModal({
+            open: true,
+            action: async () => {
+                try {
+                    await api.patch(`/bookings/${id}/cancel`);
+                    fetchBookings();
+                    showSuccess('Booking cancelled');
+                } catch (err) {
+                    console.error(err);
+                    showError('Failed to cancel booking');
+                }
+            },
+            bookingId: id,
+            title: 'Cancel Booking',
+            message: 'Are you sure you want to cancel this booking?',
+            confirmText: 'Cancel Booking',
+            confirmColor: 'red'
+        });
     };
 
     const openReviewModal = (booking) => {
@@ -85,15 +116,30 @@ const BookingList = ({ role }) => {
         fetchBookings();
     };
 
-    if (loading) return <div className="text-center py-8">Loading bookings...</div>;
-    if (error) return <div className="text-red-600 text-center py-8">{error}</div>;
+    if (loading) return <LoadingSkeleton type="list" count={5} />;
+    if (error) return (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+                <span className="text-red-600">⚠️</span>
+                <p className="text-red-800">{error}</p>
+            </div>
+        </div>
+    );
 
     return (
         <>
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
                 <ul className="divide-y divide-gray-200">
                     {bookings.length === 0 ? (
-                        <li className="px-4 py-4 sm:px-6 text-gray-500">No bookings found.</li>
+                        <li className="px-4 py-4 sm:px-6">
+                            <EmptyState
+                                icon="📅"
+                                title="No bookings found"
+                                description={role === 'student' 
+                                    ? "You haven't made any bookings yet. Start by finding a tutor!"
+                                    : "You don't have any booking requests yet."}
+                            />
+                        </li>
                     ) : (
                         bookings.map((booking) => (
                             <li key={booking._id}>
@@ -215,6 +261,22 @@ const BookingList = ({ role }) => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {confirmModal.open && (
+                <ConfirmationModal
+                    title={confirmModal.title}
+                    message={confirmModal.message}
+                    confirmText={confirmModal.confirmText}
+                    cancelText="Cancel"
+                    confirmColor={confirmModal.confirmColor || 'red'}
+                    onConfirm={() => {
+                        confirmModal.action();
+                        setConfirmModal({ open: false, action: null, bookingId: null });
+                    }}
+                    onCancel={() => setConfirmModal({ open: false, action: null, bookingId: null })}
+                />
             )}
         </>
     );

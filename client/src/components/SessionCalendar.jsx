@@ -185,14 +185,20 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
                     <button
                         key={index}
                         onClick={() => day && handleDateSelect(new Date(year, month, day))}
+                        onKeyDown={(e) => {
+                            if (day && (e.key === 'Enter' || e.key === ' ')) {
+                                e.preventDefault();
+                                handleDateSelect(new Date(year, month, day));
+                            }
+                        }}
                         disabled={!day}
+                        aria-label={day ? `Select ${new Date(year, month, day).toLocaleDateString()}` : undefined}
                         className={`
-                            p-2 text-sm rounded-md transition-colors
-                            ${!day ? 'cursor-default' : 'hover:bg-gray-100 cursor-pointer'}
-                            ${day && isToday(day) ? 'bg-blue-100 font-semibold' : ''}
-                            ${day && isSelected(day) ? 'bg-indigo-600 text-white' : ''}
+                            p-2 text-sm rounded-md transition-all duration-200
+                            ${!day ? 'cursor-default invisible' : 'hover:bg-gray-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500'}
+                            ${day && isToday(day) ? 'bg-blue-100 font-semibold ring-2 ring-blue-300' : ''}
+                            ${day && isSelected(day) ? 'bg-indigo-600 text-white shadow-md' : ''}
                             ${day && hasBooking(day) ? 'ring-2 ring-green-500' : ''}
-                            ${!day ? 'invisible' : ''}
                         `}
                     >
                         {day}
@@ -227,14 +233,21 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
                                 <button
                                     key={slot}
                                     onClick={() => !isBooked && setSelectedTime(slot)}
+                                    onKeyDown={(e) => {
+                                        if (!isBooked && (e.key === 'Enter' || e.key === ' ')) {
+                                            e.preventDefault();
+                                            setSelectedTime(slot);
+                                        }
+                                    }}
                                     disabled={isBooked}
+                                    aria-label={isBooked ? `${slot} - Booked` : `Select ${slot}`}
                                     className={`
-                                        px-3 py-2 text-sm rounded-md border transition-colors
+                                        px-3 py-2 text-sm rounded-md border transition-all duration-200
                                         ${isBooked 
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' 
                                             : selectedTime === slot
-                                                ? 'bg-indigo-600 text-white border-indigo-600'
-                                                : 'bg-white text-gray-700 border-gray-300 hover:bg-indigo-50 hover:border-indigo-300'
+                                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                                                : 'bg-white text-gray-700 border-gray-300 hover:bg-indigo-50 hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500'
                                         }
                                     `}
                                 >
@@ -250,10 +263,29 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
             {selectedDate && selectedTime && (
                 <button
                     onClick={handleBooking}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleBooking();
+                        }
+                    }}
                     disabled={loading}
-                    className="w-full mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                    className="w-full mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
                 >
-                    {loading ? 'Booking...' : `Book Session for ${selectedDate.toLocaleDateString()} at ${selectedTime}`}
+                    {loading ? (
+                        <>
+                            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Booking...
+                        </>
+                    ) : (
+                        <>
+                            <span>📅</span>
+                            <span>Book Session for {selectedDate.toLocaleDateString()} at {selectedTime}</span>
+                        </>
+                    )}
                 </button>
             )}
         </div>

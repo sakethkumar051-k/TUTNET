@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import LoadingSkeleton from './LoadingSkeleton';
+import EmptyState from './EmptyState';
 
 const StudyMaterials = () => {
     const [materials, setMaterials] = useState([]);
@@ -49,7 +51,7 @@ const StudyMaterials = () => {
     };
 
     if (loading) {
-        return <div className="text-center py-8">Loading materials...</div>;
+        return <LoadingSkeleton type="card" count={6} />;
     }
 
     return (
@@ -101,9 +103,12 @@ const StudyMaterials = () => {
             {/* Materials Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {materials.length === 0 ? (
-                    <div className="col-span-full text-center py-12 text-gray-500">
-                        <p className="text-lg">No study materials found</p>
-                        <p className="text-sm mt-2">Try adjusting your filters</p>
+                    <div className="col-span-full">
+                        <EmptyState
+                            icon="📚"
+                            title="No study materials found"
+                            description="Try adjusting your filters or check back later for new materials."
+                        />
                     </div>
                 ) : (
                     materials.map((material) => (
@@ -129,7 +134,14 @@ const StudyMaterials = () => {
                             </div>
                             <button
                                 onClick={() => handleDownload(material)}
-                                className="w-full px-4 py-2 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors text-sm font-medium"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        handleDownload(material);
+                                    }
+                                }}
+                                className="w-full px-4 py-2 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                aria-label={`Download ${material.title}`}
                             >
                                 Download / View
                             </button>

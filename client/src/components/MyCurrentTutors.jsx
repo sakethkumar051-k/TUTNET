@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import LoadingSkeleton from './LoadingSkeleton';
+import EmptyState from './EmptyState';
 
 const MyCurrentTutors = () => {
     const [currentTutors, setCurrentTutors] = useState([]);
@@ -63,16 +65,19 @@ const MyCurrentTutors = () => {
     };
 
     if (loading) {
-        return <div className="text-center py-8">Loading current tutors...</div>;
+        return <LoadingSkeleton type="card" count={3} />;
     }
 
     return (
         <div className="space-y-6">
             {currentTutors.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-                    <p className="text-lg text-gray-500 mb-2">No current tutors</p>
-                    <p className="text-sm text-gray-400">Book a tutor to start a relationship!</p>
-                </div>
+                <EmptyState
+                    icon="👨‍🏫"
+                    title="No current tutors"
+                    description="Book a tutor and get your first session approved to start a relationship!"
+                    actionLabel="Find Tutors"
+                    onAction={() => navigate('/student-dashboard?tab=find-tutors')}
+                />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {currentTutors.map((tutor) => {

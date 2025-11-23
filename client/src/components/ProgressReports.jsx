@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import LoadingSkeleton from './LoadingSkeleton';
+import EmptyState from './EmptyState';
 
 const ProgressReports = () => {
     const [reports, setReports] = useState([]);
@@ -35,20 +37,19 @@ const ProgressReports = () => {
     };
 
     if (loading) {
-        return <div className="text-center py-8">Loading progress reports...</div>;
+        return <LoadingSkeleton type="list" count={3} />;
     }
 
     return (
         <div className="space-y-4">
             {reports.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-                    <p className="text-lg text-gray-500">No progress reports available</p>
-                    <p className="text-sm text-gray-400 mt-2">
-                        {user?.role === 'student' 
-                            ? 'Your tutors will create progress reports after sessions'
-                            : 'Create progress reports for your students'}
-                    </p>
-                </div>
+                <EmptyState
+                    icon="📊"
+                    title="No progress reports available"
+                    description={user?.role === 'student' 
+                        ? 'Your tutors will create progress reports after sessions. Check back after your first completed session!'
+                        : 'Create progress reports for your students after completing sessions.'}
+                />
             ) : (
                 reports.map((report) => (
                     <div

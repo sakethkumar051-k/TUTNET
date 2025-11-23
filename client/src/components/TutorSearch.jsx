@@ -119,14 +119,21 @@ const TutorSearch = ({ onSearch }) => {
                 <div className="flex gap-3">
                     <button
                         type="submit"
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-sm hover:shadow-md"
                     >
-                        Search
+                        🔍 Search
                     </button>
                     <button
                         type="button"
                         onClick={handleClear}
-                        className="px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 rounded-md transition-colors"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleClear();
+                            }
+                        }}
+                        className="px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                        aria-label="Clear all filters"
                     >
                         Clear
                     </button>

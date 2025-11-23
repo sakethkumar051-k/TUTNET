@@ -60,12 +60,23 @@ const Toast = ({ id, message, type, onClose }) => {
     };
 
     return (
-        <div className={`${bgColors[type]} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] max-w-md animate-slide-in`}>
-            <span className="text-xl font-bold">{icons[type]}</span>
-            <p className="flex-1">{message}</p>
+        <div 
+            className={`${bgColors[type]} text-white px-6 py-4 rounded-lg shadow-xl flex items-center gap-3 min-w-[300px] max-w-md animate-slide-in border-l-4 border-white border-opacity-50`}
+            role="alert"
+            aria-live="polite"
+        >
+            <span className="text-xl font-bold flex-shrink-0">{icons[type]}</span>
+            <p className="flex-1 text-sm font-medium">{message}</p>
             <button
                 onClick={onClose}
-                className="text-white hover:text-gray-200 text-xl font-bold"
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onClose();
+                    }
+                }}
+                className="text-white hover:text-gray-200 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-white rounded transition-colors flex-shrink-0"
+                aria-label="Close notification"
             >
                 ×
             </button>

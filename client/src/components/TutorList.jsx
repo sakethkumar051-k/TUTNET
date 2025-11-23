@@ -4,6 +4,8 @@ import api from '../utils/api';
 import TutorCard from './TutorCard';
 import BookingForm from './BookingForm';
 import TutorSearch from './TutorSearch';
+import LoadingSkeleton from './LoadingSkeleton';
+import EmptyState from './EmptyState';
 
 const TutorList = () => {
     const [tutors, setTutors] = useState([]);
@@ -50,11 +52,7 @@ const TutorList = () => {
         return (
             <div className="space-y-6">
                 <TutorSearch onSearch={handleSearch} />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="bg-gray-200 animate-pulse rounded-xl h-96"></div>
-                    ))}
-                </div>
+                <LoadingSkeleton type="card" count={6} />
             </div>
         );
     }
@@ -73,13 +71,11 @@ const TutorList = () => {
 
             {/* Tutor Grid */}
             {filteredTutors.length === 0 ? (
-                <div className="text-center py-12">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No tutors found</h3>
-                    <p className="mt-1 text-sm text-gray-500">Try adjusting your search filters</p>
-                </div>
+                <EmptyState
+                    icon="🔍"
+                    title="No tutors found"
+                    description="Try adjusting your search filters or check back later for new tutors."
+                />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredTutors.map(tutor => (

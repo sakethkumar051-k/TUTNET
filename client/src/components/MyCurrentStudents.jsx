@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
+import LoadingSkeleton from './LoadingSkeleton';
+import EmptyState from './EmptyState';
 
 const MyCurrentStudents = () => {
     const [currentStudents, setCurrentStudents] = useState([]);
@@ -31,16 +33,17 @@ const MyCurrentStudents = () => {
     };
 
     if (loading) {
-        return <div className="text-center py-8">Loading current students...</div>;
+        return <LoadingSkeleton type="card" count={3} />;
     }
 
     return (
         <div className="space-y-6">
             {currentStudents.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-                    <p className="text-lg text-gray-500 mb-2">No current students</p>
-                    <p className="text-sm text-gray-400">Students will appear here after booking approval</p>
-                </div>
+                <EmptyState
+                    icon="👨‍🎓"
+                    title="No current students"
+                    description="Students will appear here after you approve their booking requests."
+                />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {currentStudents.map((student) => {
@@ -93,13 +96,27 @@ const MyCurrentStudents = () => {
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => navigate(`/tutor-dashboard?tab=progress&studentId=${relationship.studentId._id}`)}
-                                        className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                navigate(`/tutor-dashboard?tab=progress&studentId=${relationship.studentId._id}`);
+                                            }
+                                        }}
+                                        className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                        aria-label="View student progress"
                                     >
                                         📊 View Progress
                                     </button>
                                     <button
                                         onClick={() => navigate(`/tutor-dashboard?tab=sessions&studentId=${relationship.studentId._id}&currentTutorId=${relationship._id}`)}
-                                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                navigate(`/tutor-dashboard?tab=sessions&studentId=${relationship.studentId._id}&currentTutorId=${relationship._id}`);
+                                            }
+                                        }}
+                                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                        aria-label="Manage sessions with student"
                                     >
                                         📅 Manage Sessions
                                     </button>

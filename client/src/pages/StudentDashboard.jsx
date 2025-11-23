@@ -13,6 +13,7 @@ import MyCurrentTutors from '../components/MyCurrentTutors';
 import TodaysSessions from '../components/TodaysSessions';
 import ProgressAnalytics from '../components/ProgressAnalytics';
 import SessionManagementDashboard from '../components/SessionManagementDashboard';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 import { useSearchParams } from 'react-router-dom';
 
 const StudentDashboard = () => {
@@ -96,25 +97,32 @@ const StudentDashboard = () => {
     return (
         <div className="h-screen bg-gray-50 flex overflow-hidden">
             {/* Left Sidebar Navigation */}
-            <div className="w-64 bg-white border-r border-gray-200 flex flex-col fixed left-0 top-16 bottom-0 z-40">
+            <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
                 <div className="p-4 border-b border-gray-200 flex-shrink-0">
                     <h1 className="text-xl font-bold text-gray-900">Student Dashboard</h1>
                     <p className="text-xs text-gray-500 mt-1">
                         Welcome, {user?.name}!
                     </p>
                 </div>
-                <nav className="flex-1 overflow-y-auto p-2">
+                <nav className="flex-1 overflow-y-auto p-2" role="navigation" aria-label="Dashboard navigation">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    setActiveTab(tab.id);
+                                }
+                            }}
+                            aria-current={activeTab === tab.id ? 'page' : undefined}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
                                 activeTab === tab.id
-                                    ? 'bg-indigo-50 text-indigo-600 font-semibold border-l-4 border-indigo-600'
+                                    ? 'bg-indigo-50 text-indigo-600 font-semibold border-l-4 border-indigo-600 shadow-sm'
                                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                             }`}
                         >
-                            <span className="text-lg">{tab.icon}</span>
+                            <span className="text-lg" aria-hidden="true">{tab.icon}</span>
                             <span className="text-sm">{tab.label}</span>
                         </button>
                     ))}
@@ -122,7 +130,7 @@ const StudentDashboard = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 overflow-y-auto ml-64">
+            <div className="flex-1 overflow-y-auto">
                 <div className="px-4 sm:px-6 lg:px-8 py-6">
                     {/* Statistics */}
                     {!loading && stats && (

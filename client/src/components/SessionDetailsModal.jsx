@@ -148,15 +148,43 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
         );
     }
 
+    // Handle ESC key to close modal
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [onClose]);
+
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div 
+            className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto"
+            onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="session-modal-title"
+        >
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
                 {/* Header */}
-                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-gray-900">Session Details</h2>
+                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
+                    <h2 id="session-modal-title" className="text-xl font-semibold text-gray-900">Session Details</h2>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                onClose();
+                            }
+                        }}
+                        className="text-gray-400 hover:text-gray-600 text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded transition-colors"
+                        aria-label="Close modal"
                     >
                         ×
                     </button>
@@ -164,7 +192,7 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
 
                 {/* Tabs */}
                 <div className="border-b border-gray-200 px-6">
-                    <nav className="-mb-px flex space-x-8">
+                    <nav className="-mb-px flex space-x-8" role="tablist">
                         {[
                             { id: 'details', label: 'Details', icon: '📋' },
                             { id: 'feedback', label: 'Feedback', icon: '💬' },
@@ -174,12 +202,21 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        setActiveTab(tab.id);
+                                    }
+                                }}
+                                role="tab"
+                                aria-selected={activeTab === tab.id}
+                                aria-controls={`tabpanel-${tab.id}`}
                                 className={`${activeTab === tab.id
                                         ? 'border-indigo-500 text-indigo-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-700'
-                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                             >
-                                <span>{tab.icon}</span>
+                                <span aria-hidden="true">{tab.icon}</span>
                                 {tab.label}
                             </button>
                         ))}
@@ -190,6 +227,7 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                 <div className="p-6">
                     {/* Details Tab */}
                     {activeTab === 'details' && (
+                        <div role="tabpanel" id="tabpanel-details" aria-labelledby="tab-details">
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -273,10 +311,12 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                 </div>
                             )}
                         </div>
+                        </div>
                     )}
 
                     {/* Feedback Tab */}
                     {activeTab === 'feedback' && (
+                        <div role="tabpanel" id="tabpanel-feedback" aria-labelledby="tab-feedback">
                         <div className="space-y-6">
                             {/* Tutor Feedback */}
                             {user?.role === 'tutor' && (
@@ -409,10 +449,12 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                 </div>
                             )}
                         </div>
+                        </div>
                     )}
 
                     {/* Materials Tab */}
                     {activeTab === 'materials' && (
+                        <div role="tabpanel" id="tabpanel-materials" aria-labelledby="tab-materials">
                         <div className="space-y-4">
                             {user?.role === 'tutor' && (
                                 <div className="p-4 bg-indigo-50 rounded-lg mb-4">
@@ -513,10 +555,12 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                 )}
                             </div>
                         </div>
+                        </div>
                     )}
 
                     {/* Homework Tab */}
                     {activeTab === 'homework' && (
+                        <div role="tabpanel" id="tabpanel-homework" aria-labelledby="tab-homework">
                         <div className="space-y-4">
                             {user?.role === 'tutor' && (
                                 <div className="p-4 bg-yellow-50 rounded-lg mb-4">
@@ -603,6 +647,7 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                     <p className="text-gray-500">No homework assigned yet</p>
                                 )}
                             </div>
+                        </div>
                         </div>
                     )}
                 </div>
