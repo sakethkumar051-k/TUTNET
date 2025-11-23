@@ -4,6 +4,11 @@ import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
 const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
+    // Early return check must be BEFORE all hooks to follow Rules of Hooks
+    if (!session || !session._id) {
+        return null;
+    }
+
     const [feedback, setFeedback] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('details');
@@ -87,11 +92,6 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
             setLoading(false);
         }
     };
-
-    // Don't render if no session
-    if (!session) {
-        return null;
-    }
 
     const handleSubmitTutorFeedback = async (e) => {
         e.preventDefault();
@@ -213,6 +213,17 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
         }
     };
 
+    // Handle ESC key to close modal - must be before conditional returns
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [onClose]);
+
     if (loading) {
         return (
             <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -228,17 +239,6 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
             </div>
         );
     }
-
-    // Handle ESC key to close modal
-    useEffect(() => {
-        const handleEscape = (e) => {
-            if (e.key === 'Escape') {
-                onClose();
-            }
-        };
-        document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
-    }, [onClose]);
 
     return (
         <div 
