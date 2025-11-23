@@ -6,7 +6,13 @@ const Footer = () => {
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
-                        <h3 className="text-lg font-semibold mb-4">Tutnet</h3>
+                        <Link to="/" className="inline-block mb-4">
+                            <img
+                                src="/tutnet-logo.png"
+                                alt="Tutnet Logo"
+                                className="h-8 brightness-0 invert"
+                            />
+                        </Link>
                         <p className="text-gray-400 text-sm">
                             Connecting students with the best home tutors in West Hyderabad.
                         </p>
@@ -14,9 +20,9 @@ const Footer = () => {
                     <div>
                         <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
                         <ul className="space-y-2 text-sm text-gray-400">
-                            <li><Link to="/" className="hover:text-white">Home</Link></li>
-                            <li><Link to="/login" className="hover:text-white">Login</Link></li>
-                            <li><Link to="/register" className="hover:text-white">Register</Link></li>
+                            <li><Link to="/" className="hover:text-white transition-colors">Home</Link></li>
+                            <li><Link to="/login" className="hover:text-white transition-colors">Login</Link></li>
+                            <li><Link to="/register" className="hover:text-white transition-colors">Register</Link></li>
                         </ul>
                     </div>
                     <div>
