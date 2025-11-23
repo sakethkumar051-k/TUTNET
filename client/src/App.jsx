@@ -10,6 +10,7 @@ import TutorDashboard from './pages/TutorDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
+import FindTutors from './pages/FindTutors';
 import Footer from './components/Footer';
 
 function App() {
@@ -24,6 +25,14 @@ function App() {
                             <Route path="/login" element={<Login />} />
                             <Route path="/register" element={<Register />} />
                             <Route path="/admin-login" element={<AdminLogin />} />
+                            <Route 
+                                path="/find-tutors" 
+                                element={
+                                    <ProtectedRoute requiredRole="student">
+                                        <FindTutors />
+                                    </ProtectedRoute>
+                                } 
+                            />
                             <Route 
                                 path="/tutor-dashboard" 
                                 element={

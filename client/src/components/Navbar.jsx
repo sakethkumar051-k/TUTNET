@@ -57,12 +57,21 @@ const Navbar = () => {
                                 <span className="text-xs text-blue-500 font-semibold">Coming soon!</span>
                             </span>
 
-                            <Link
-                                to={user ? getDashboardLink() : "/login"}
-                                className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
-                            >
-                                Find tutors
-                            </Link>
+                            {user?.role === 'student' ? (
+                                <Link
+                                    to="/find-tutors"
+                                    className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+                                >
+                                    Find tutors
+                                </Link>
+                            ) : (
+                                <Link
+                                    to={user ? getDashboardLink() : "/login"}
+                                    className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+                                >
+                                    Find tutors
+                                </Link>
+                            )}
 
                             {user && (
                                 <Link

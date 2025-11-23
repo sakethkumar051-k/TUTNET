@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
-import TutorList from '../components/TutorList';
 import BookingList from '../components/BookingList';
 import ReviewList from '../components/ReviewList';
 import DashboardStats from '../components/DashboardStats';
@@ -20,14 +19,14 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 const StudentDashboard = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'find-tutors');
+    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'today');
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
 
     // Sync activeTab with URL search params
     useEffect(() => {
-        const tabFromUrl = searchParams.get('tab') || 'find-tutors';
+        const tabFromUrl = searchParams.get('tab') || 'today';
         if (tabFromUrl !== activeTab) {
             setActiveTab(tabFromUrl);
         }
@@ -96,7 +95,6 @@ const StudentDashboard = () => {
         { id: 'current-tutors', label: 'My Current Tutors', icon: '👨‍🏫' },
         { id: 'sessions', label: 'Session Management', icon: '📆' },
         { id: 'session-history', label: 'Session History', icon: '📜' },
-        { id: 'find-tutors', label: 'Find Tutors', icon: '🔍' },
         { id: 'favorites', label: 'Favorites', icon: '⭐' },
         { id: 'my-bookings', label: 'My Bookings', icon: '📋' },
         { id: 'study-materials', label: 'Study Materials', icon: '📚' },
@@ -174,7 +172,6 @@ const StudentDashboard = () => {
                     {activeTab === 'current-tutors' && <MyCurrentTutors />}
                     {activeTab === 'sessions' && <SessionManagementDashboard />}
                     {activeTab === 'session-history' && <SessionHistory />}
-                    {activeTab === 'find-tutors' && <TutorList />}
                     {activeTab === 'favorites' && <FavoriteTutors />}
                     {activeTab === 'my-bookings' && <BookingList role="student" />}
                     {activeTab === 'study-materials' && <StudyMaterials />}
