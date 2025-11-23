@@ -8,10 +8,10 @@ const ConfirmationModal = ({
     onCancel 
 }) => {
     const colorClasses = {
-        red: 'bg-red-600 hover:bg-red-700',
-        blue: 'bg-blue-600 hover:bg-blue-700',
-        green: 'bg-green-600 hover:bg-green-700',
-        indigo: 'bg-indigo-600 hover:bg-indigo-700'
+        red: 'bg-red-600 hover:bg-red-700 focus:ring-red-500',
+        blue: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
+        green: 'bg-green-600 hover:bg-green-700 focus:ring-green-500',
+        indigo: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
     };
 
     return (
@@ -29,7 +29,7 @@ const ConfirmationModal = ({
                         </button>
                         <button
                             onClick={onConfirm}
-                            className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${confirmColor}-500 ${colorClasses[confirmColor]}`}
+                            className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${colorClasses[confirmColor]}`}
                         >
                             {confirmText}
                         </button>
