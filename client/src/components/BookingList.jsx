@@ -71,14 +71,12 @@ const BookingList = ({ role }) => {
             open: true,
             action: async () => {
                 try {
-                    await api.patch(`/bookings/${id}/complete`);
+                    const { data: updatedBooking } = await api.patch(`/bookings/${id}/complete`);
                     await fetchBookings();
                     showSuccess('Booking marked as completed!');
-                    // Open session details modal after marking complete
-                    if (booking) {
-                        setSelectedBooking(booking);
-                        setSessionDetailsModalOpen(true);
-                    }
+                    // Open session details modal after marking complete with updated booking
+                    setSelectedBooking({ ...booking, ...updatedBooking, status: 'completed' });
+                    setSessionDetailsModalOpen(true);
                 } catch (err) {
                     console.error(err);
                     showError('Failed to complete booking');
