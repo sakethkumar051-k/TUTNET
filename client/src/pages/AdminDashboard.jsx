@@ -58,7 +58,7 @@ const AdminDashboard = () => {
     return (
         <div className="h-screen bg-gray-50 flex overflow-hidden">
             {/* Left Sidebar Navigation */}
-            <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+            <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full fixed left-0 top-16 z-40">
                 <div className="p-4 border-b border-gray-200 flex-shrink-0">
                     <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
                 </div>
@@ -81,7 +81,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto ml-64">
                 <div className="px-4 sm:px-6 lg:px-8 py-6">
                     {message.text && (
                         <div className={`mb-4 p-4 rounded-md ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>

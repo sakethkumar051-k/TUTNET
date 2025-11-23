@@ -142,7 +142,7 @@ const TutorDashboard = () => {
     return (
         <div className="h-screen bg-gray-50 flex overflow-hidden">
             {/* Left Sidebar Navigation */}
-            <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+            <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full fixed left-0 top-16 z-40">
                 <div className="p-4 border-b border-gray-200 flex-shrink-0">
                     <h1 className="text-xl font-bold text-gray-900">Tutor Dashboard</h1>
                     <p className="text-xs text-gray-500 mt-1">
@@ -171,7 +171,7 @@ const TutorDashboard = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto ml-64">
                 <div className="px-4 sm:px-6 lg:px-8 py-6">
                     {/* Approval Status Alert */}
                     {stats && stats.approvalStatus === 'pending' && (
