@@ -76,7 +76,7 @@ const MyCurrentTutors = () => {
                     title="No current tutors"
                     description="Book a tutor and get your first session approved to start a relationship!"
                     actionLabel="Find Tutors"
-                    onAction={() => navigate('/student-dashboard?tab=find-tutors')}
+                    onAction={() => navigate('/find-tutors')}
                 />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

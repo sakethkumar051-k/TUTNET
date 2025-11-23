@@ -47,7 +47,7 @@ const FavoriteTutors = () => {
                     title="No favorite tutors yet"
                     description="Start adding tutors to your favorites! Click the star icon on any tutor card."
                     actionLabel="Find Tutors"
-                    onAction={() => window.location.href = '/student-dashboard?tab=find-tutors'}
+                    onAction={() => window.location.href = '/find-tutors'}
                 />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

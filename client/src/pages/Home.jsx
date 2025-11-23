@@ -282,7 +282,7 @@ const Home = () => {
                             </div>
                             <div className="text-center">
                                 <Link
-                                    to="/student-dashboard?tab=find-tutors"
+                                    to="/find-tutors"
                                     className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-indigo-500/50"
                                 >
                                     {user ? 'View All Tutors' : 'Sign Up to View All Tutors'}
