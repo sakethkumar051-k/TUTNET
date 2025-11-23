@@ -70,10 +70,21 @@ const SessionManagementDashboard = () => {
 
     const fetchTodaysData = async () => {
         try {
-            // Fetch today's sessions
-            const { data: sessions } = await api.get('/current-tutors/today');
+            // Fetch all sessions for this relationship
+            const { data: allBookings } = await api.get('/bookings/mine');
+            
+            // Filter bookings for this relationship
+            const relationshipBookings = allBookings.filter(b => {
+                if (user?.role === 'student') {
+                    return b.tutorId?._id === (relationship?.tutorId?._id || tutorId);
+                } else {
+                    return b.studentId?._id === (relationship?.studentId?._id || studentId);
+                }
+            });
+
+            // Get today's date
             const today = new Date().toISOString().split('T')[0];
-            const todays = sessions.filter(s => {
+            const todays = relationshipBookings.filter(s => {
                 if (s.sessionDate) {
                     return s.sessionDate.split('T')[0] === today;
                 }
@@ -81,7 +92,7 @@ const SessionManagementDashboard = () => {
             });
             setTodaysSessions(todays);
 
-            // Fetch today's notes and feedback
+            // Fetch notes and feedback for today's sessions
             const notes = [];
             const feedbacks = [];
 
@@ -176,25 +187,47 @@ const SessionManagementDashboard = () => {
                                 {todaysSessions.map(session => (
                                     <div
                                         key={session._id}
-                                        className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                                        className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
                                         onClick={() => setSelectedSession(session)}
                                     >
                                         <div className="flex items-center justify-between">
-                                            <div>
+                                            <div className="flex-1">
                                                 <p className="font-medium text-gray-900">
-                                                    {session.preferredSchedule}
+                                                    {session.sessionDate 
+                                                        ? new Date(session.sessionDate).toLocaleTimeString('en-US', { 
+                                                            hour: '2-digit', 
+                                                            minute: '2-digit' 
+                                                        })
+                                                        : session.preferredSchedule}
                                                 </p>
                                                 <p className="text-sm text-gray-500">
                                                     {session.subject}
                                                 </p>
+                                                {session.duration && (
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        Duration: {session.duration} min
+                                                    </p>
+                                                )}
                                             </div>
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                session.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                                session.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                                                'bg-yellow-100 text-yellow-800'
-                                            }`}>
-                                                {session.status}
-                                            </span>
+                                            <div className="flex flex-col items-end gap-1">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                    session.attendanceStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                                                    session.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                                                    session.status === 'completed' ? 'bg-purple-100 text-purple-800' :
+                                                    'bg-yellow-100 text-yellow-800'
+                                                }`}>
+                                                    {session.attendanceStatus || session.status}
+                                                </span>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedSession(session);
+                                                    }}
+                                                    className="text-xs text-indigo-600 hover:text-indigo-800"
+                                                >
+                                                    View Details →
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
