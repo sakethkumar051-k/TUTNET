@@ -34,7 +34,7 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
                 return booking.preferredSchedule.includes(dateStr);
             });
             setExistingBookings(bookingsForDate);
-            
+
             // Mark unavailable slots
             const bookedSlots = bookingsForDate.map(b => {
                 if (b.sessionDate) {
@@ -42,7 +42,7 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
                 }
                 return null;
             }).filter(Boolean);
-            
+
             setAvailableSlots(timeSlots.filter(slot => !bookedSlots.includes(slot)));
         } catch (err) {
             console.error('Failed to fetch bookings:', err);
@@ -67,11 +67,11 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
             const [hours, minutes] = selectedTime.split(':');
             dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-            const preferredSchedule = `${selectedDate.toLocaleDateString('en-US', { 
-                weekday: 'short', 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
+            const preferredSchedule = `${selectedDate.toLocaleDateString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
             })} at ${selectedTime}`;
 
             const bookingData = {
@@ -98,7 +98,28 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
             fetchExistingBookings();
             onBookingCreated?.();
         } catch (err) {
-            showError(err.response?.data?.message || 'Failed to book session');
+            console.error('Booking error:', err);
+            console.error('Error response:', err.response);
+
+            // Extract and display error message
+            const errorMessage = err.response?.data?.message || 'Failed to book session';
+            const errorCode = err.response?.data?.code;
+
+            // Show detailed error to user
+            if (errorCode) {
+                showError(`${errorMessage} (Error code: ${errorCode})`);
+            } else if (err.response?.status === 400) {
+                showError(`Booking validation failed: ${errorMessage}`);
+            } else if (err.response?.status === 404) {
+                showError(`Tutor not found: ${errorMessage}`);
+            } else if (err.response?.status === 403) {
+                showError(`Not authorized: ${errorMessage}`);
+            } else {
+                showError(errorMessage);
+            }
+
+            // Also alert for visibility during debugging
+            alert(`Booking failed: ${errorMessage}\n\nPlease check the browser console (F12) for more details.`);
         } finally {
             setLoading(false);
         }
@@ -124,15 +145,15 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
 
     const isToday = (day) => {
         const today = new Date();
-        return day === today.getDate() && 
-               month === today.getMonth() && 
-               year === today.getFullYear();
+        return day === today.getDate() &&
+            month === today.getMonth() &&
+            year === today.getFullYear();
     };
 
     const isSelected = (day) => {
-        return day === selectedDate.getDate() && 
-               month === selectedDate.getMonth() && 
-               year === selectedDate.getFullYear();
+        return day === selectedDate.getDate() &&
+            month === selectedDate.getMonth() &&
+            year === selectedDate.getFullYear();
     };
 
     const hasBooking = (day) => {
@@ -154,7 +175,7 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Book a Session</h3>
-            
+
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-4">
                 <button
@@ -219,16 +240,16 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
                         {timeSlots.map(slot => {
                             const isBooked = existingBookings.some(booking => {
                                 if (booking.sessionDate) {
-                                    const bookingTime = new Date(booking.sessionDate).toLocaleTimeString('en-US', { 
-                                        hour: '2-digit', 
-                                        minute: '2-digit', 
-                                        hour12: false 
+                                    const bookingTime = new Date(booking.sessionDate).toLocaleTimeString('en-US', {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: false
                                     });
                                     return bookingTime === slot;
                                 }
                                 return false;
                             });
-                            
+
                             return (
                                 <button
                                     key={slot}
@@ -243,8 +264,8 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
                                     aria-label={isBooked ? `${slot} - Booked` : `Select ${slot}`}
                                     className={`
                                         px-3 py-2 text-sm rounded-md border transition-all duration-200
-                                        ${isBooked 
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200' 
+                                        ${isBooked
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200'
                                             : selectedTime === slot
                                                 ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
                                                 : 'bg-white text-gray-700 border-gray-300 hover:bg-indigo-50 hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500'

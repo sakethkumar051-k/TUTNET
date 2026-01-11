@@ -8,7 +8,28 @@ const CurrentTutor = require('../models/CurrentTutor');
 // @access  Private (Student or Tutor)
 const createBooking = async (req, res) => {
     try {
-        const { tutorId, studentId, subject, preferredSchedule, sessionDate, currentTutorId, bookingType } = req.body;
+        // DEBUG LOGGING
+        console.log('=== BOOKING REQUEST RECEIVED ===');
+        console.log('User:', req.user);
+        console.log('Request Body:', JSON.stringify(req.body, null, 2));
+        console.log('Headers:', req.headers.authorization);
+
+        const { tutorId, studentId, subject, preferredSchedule, sessionDate, currentTutorId, bookingCategory, bookingType } = req.body;
+
+        // CRITICAL: Check if user is authenticated
+        if (!req.user || !req.user.id) {
+            console.log('ERROR: No user found in request');
+            return res.status(401).json({ message: 'Authentication required. Please log in.' });
+        }
+
+        // Handle legacy bookingType → bookingCategory mapping
+        let finalCategory = bookingCategory;
+        if (!finalCategory && bookingType) {
+            finalCategory = bookingType === 'demo' ? 'trial' : 'session';
+        }
+        if (!finalCategory) {
+            finalCategory = 'session'; // Default
+        }
 
         let finalTutorId, finalStudentId;
 
@@ -28,11 +49,40 @@ const createBooking = async (req, res) => {
                 return res.status(404).json({ message: 'Tutor not found' });
             }
 
-            // Check if tutor is approved
+            // Check if tutor has a profile (relaxed check - don't require approval status)
             const tutorProfile = await TutorProfile.findOne({ userId: finalTutorId });
-            if (!tutorProfile || tutorProfile.approvalStatus !== 'approved') {
-                return res.status(400).json({ message: 'Tutor is not available for booking' });
+            if (!tutorProfile) {
+                return res.status(400).json({ message: 'Tutor profile not found. Please contact the tutor to set up their profile.' });
             }
+
+            // Optional: Warn if tutor is not approved, but allow booking
+            if (tutorProfile.approvalStatus !== 'approved') {
+                console.log(`Warning: Booking created for tutor ${finalTutorId} with approval status: ${tutorProfile.approvalStatus}`);
+            }
+
+            // TRIAL-SPECIFIC VALIDATION
+            if (finalCategory === 'trial') {
+                // Check active trial limit (max 2-3)
+                const activeTrialCount = await Booking.countActiveTrials(finalStudentId);
+                const maxActiveTrials = 3; // Configurable
+
+                if (activeTrialCount >= maxActiveTrials) {
+                    return res.status(400).json({
+                        message: `You already have ${activeTrialCount} active trial bookings. Please complete or cancel existing trials before requesting more.`,
+                        code: 'MAX_TRIALS_EXCEEDED'
+                    });
+                }
+
+                // Check if student can request trial with this tutor (1 per tutor rule)
+                const canRequest = await Booking.canRequestTrial(finalStudentId, finalTutorId);
+                if (!canRequest) {
+                    return res.status(400).json({
+                        message: 'You already have a trial booking with this tutor. Book a regular session instead!',
+                        code: 'TRIAL_EXISTS'
+                    });
+                }
+            }
+
         } else if (req.user.role === 'tutor') {
             // Tutor booking for a student (must be a current student)
             finalTutorId = req.user.id;
@@ -98,6 +148,13 @@ const createBooking = async (req, res) => {
             });
         }
 
+        // Calculate trial expiry (48 hours for pending trials)
+        let trialExpiresAt = null;
+        if (finalCategory === 'trial') {
+            trialExpiresAt = new Date();
+            trialExpiresAt.setHours(trialExpiresAt.getHours() + 48);
+        }
+
         const booking = await Booking.create({
             studentId: finalStudentId,
             tutorId: finalTutorId,
@@ -106,7 +163,10 @@ const createBooking = async (req, res) => {
             sessionDate: parsedSessionDate,
             status: req.user.role === 'tutor' ? 'approved' : 'pending', // Tutors can auto-approve
             currentTutorId: currentTutor?._id,
-            bookingType: bookingType || 'regular'
+            bookingCategory: finalCategory,
+            trialExpiresAt: trialExpiresAt,
+            // Keep legacy field for migration compatibility
+            bookingType: finalCategory === 'trial' ? 'demo' : 'regular'
         });
 
         // If tutor created booking, update relationship stats

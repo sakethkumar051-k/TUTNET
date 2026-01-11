@@ -49,7 +49,6 @@ try {
     app.use('/api/tutors', require('./routes/tutor.routes'));
     app.use('/api/bookings', require('./routes/booking.routes'));
     app.use('/api/reviews', require('./routes/review.routes'));
-    app.use('/api/study-materials', require('./routes/studyMaterial.routes'));
     app.use('/api/favorites', require('./routes/favorite.routes'));
     app.use('/api/progress-reports', require('./routes/progressReport.routes'));
     app.use('/api/attendance', require('./routes/attendance.routes'));
@@ -79,13 +78,13 @@ app.use((req, res, next) => {
     };
 
     const correctMethod = methodMismatch[req.path];
-    const methodHint = correctMethod && req.method !== correctMethod 
-        ? ` This endpoint requires ${correctMethod} method, but you used ${req.method}.` 
+    const methodHint = correctMethod && req.method !== correctMethod
+        ? ` This endpoint requires ${correctMethod} method, but you used ${req.method}.`
         : '';
 
     res.status(404).json({
         message: `Route ${req.method} ${req.path} not found.${methodHint}`,
-        hint: correctMethod 
+        hint: correctMethod
             ? `Try using ${correctMethod} method instead of ${req.method}`
             : 'Check the API documentation for the correct endpoint and method',
         availableEndpoints: [

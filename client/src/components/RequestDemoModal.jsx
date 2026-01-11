@@ -1,17 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 const RequestDemoModal = ({ tutor, onClose, onSuccess }) => {
+    const { user } = useAuth();
     const { showSuccess, showError } = useToast();
     const [submitting, setSubmitting] = useState(false);
+    const [demoInfo, setDemoInfo] = useState(null); // Track student's demo usage
+    const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         preferredDate: '',
         preferredTime: '',
         mode: tutor.mode === 'both' ? 'online' : tutor.mode,
-        message: '',
+        studentNotes: '',
         subject: tutor.subjects?.[0] || ''
     });
+
+    useEffect(() => {
+        fetchDemoInfo();
+    }, []);
+
+    const fetchDemoInfo = async () => {
+        try {
+            const { data } = await api.get('/demos/my-demos');
+            setDemoInfo({
+                demosUsed: data.demosUsed,
+                demosRemaining: data.demosRemaining
+            });
+        } catch (err) {
+            console.error('Error fetching demo info:', err);
+            // Default if endpoint fails
+            setDemoInfo({ demosUsed: 0, demosRemaining: 3 });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,27 +46,40 @@ const RequestDemoModal = ({ tutor, onClose, onSuccess }) => {
         setSubmitting(true);
 
         try {
-            // Combine date and time for preferredSchedule string
-            const schedule = `${formData.preferredDate} ${formData.preferredTime}`;
-
-            await api.post('/bookings', {
+            // NEW: Use unified /bookings endpoint with category: 'trial'
+            const { data } = await api.post('/bookings', {
                 tutorId: tutor.userId._id,
                 subject: formData.subject,
-                preferredSchedule: schedule,
-                bookingType: 'demo',
-                // For demo, we might not have sessionDate yet, so we rely on preferredSchedule
+                preferredSchedule: `${formData.preferredDate} ${formData.preferredTime}`,
+                bookingCategory: 'trial', // Distinguishes from regular bookings
+                sessionDate: formData.preferredDate,
+                mode: formData.mode,
+                studentNotes: formData.studentNotes
             });
 
-            showSuccess('Demo request sent successfully!');
+            showSuccess(`✅ Trial booked! ${data.message || 'The tutor will be notified.'}`);
             if (onSuccess) onSuccess();
             onClose();
         } catch (err) {
-            console.error(err);
-            showError(err.response?.data?.message || 'Failed to request demo');
+            console.error('Trial booking error:', err);
+            const errorCode = err.response?.data?.code;
+            const errorMessage = err.response?.data?.message;
+
+            if (errorCode === 'MAX_TRIALS_EXCEEDED') {
+                showError(errorMessage || 'You\'ve reached your active trial limit!');
+            } else if (errorCode === 'TRIAL_EXISTS') {
+                showError(errorMessage || 'You already have a trial with this tutor. Book a regular session instead!');
+            } else {
+                showError(errorMessage || 'Failed to request trial. Please try again.');
+            }
         } finally {
             setSubmitting(false);
         }
     };
+
+    // Calculate next week for date limit
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 7);
 
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -57,28 +94,62 @@ const RequestDemoModal = ({ tutor, onClose, onSuccess }) => {
                 <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
                 <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
-                    <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div className="sm:flex sm:items-start">
-                            <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
-                                <span className="text-xl">🎓</span>
-                            </div>
-                            <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                    Request Demo Class
-                                </h3>
-                                <p className="text-sm text-gray-500 mt-1">
-                                    Request a free demo session with {tutor.userId.name}.
-                                </p>
+                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-3">
+                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <span>🎓</span>
+                            Book Your Free Demo Class
+                        </h3>
+                        <p className="text-indigo-100 text-sm mt-1">
+                            30-minute trial session with {tutor.userId.name}
+                        </p>
+                    </div>
 
-                                <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+                    <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
+                        {loading ? (
+                            <div className="text-center py-4">
+                                <p className="text-gray-500">Loading...</p>
+                            </div>
+                        ) : demoInfo && demoInfo.demosRemaining <= 0 ? (
+                            <div className="text-center py-6">
+                                <div className="text-5xl mb-4">🎯</div>
+                                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                                    You've Used All Your Free Demos!
+                                </h4>
+                                <p className="text-gray-600 mb-6">
+                                    Ready to commit? Book a regular session to continue learning with {tutor.userId.name}.
+                                </p>
+                                <button
+                                    onClick={onClose}
+                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                                >
+                                    Book Regular Session Instead
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Demo Credits Display */}
+                                {demoInfo && (
+                                    <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+                                        <div className="flex items-center">
+                                            <svg className="h-5 w-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <p className="text-sm text-blue-700">
+                                                <span className="font-bold">{demoInfo.demosRemaining}</span> free demo{demoInfo.demosRemaining !== 1 ? 's' : ''} remaining
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <form onSubmit={handleSubmit} className="space-y-4">
                                     {/* Subject Selection */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">Subject</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
                                         <select
                                             name="subject"
                                             value={formData.subject}
                                             onChange={handleChange}
-                                            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md border"
+                                            className="block w-full pl-3 pr-10 py-2.5 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border"
                                             required
                                         >
                                             {tutor.subjects?.map((sub, idx) => (
@@ -89,26 +160,28 @@ const RequestDemoModal = ({ tutor, onClose, onSuccess }) => {
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Preferred Date</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Date *</label>
                                             <input
                                                 type="date"
                                                 name="preferredDate"
                                                 required
                                                 min={new Date().toISOString().split('T')[0]}
+                                                max={maxDate.toISOString().split('T')[0]}
                                                 value={formData.preferredDate}
                                                 onChange={handleChange}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                className="block w-full border border-gray-300 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                             />
+                                            <p className="text-xs text-gray-500 mt-1">Next 7 days</p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Preferred Time</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Time *</label>
                                             <input
                                                 type="time"
                                                 name="preferredTime"
                                                 required
                                                 value={formData.preferredTime}
                                                 onChange={handleChange}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                className="block w-full border border-gray-300 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                             />
                                         </div>
                                     </div>
@@ -116,65 +189,90 @@ const RequestDemoModal = ({ tutor, onClose, onSuccess }) => {
                                     {/* Mode Selection if tutor supports both */}
                                     {tutor.mode === 'both' && (
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Preferred Mode</label>
-                                            <div className="mt-2 space-x-4">
-                                                <label className="inline-flex items-center">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Mode *</label>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <label className={`cursor-pointer ${formData.mode === 'online' ? 'ring-2 ring-indigo-500' : ''}`}>
                                                     <input
                                                         type="radio"
                                                         name="mode"
                                                         value="online"
                                                         checked={formData.mode === 'online'}
                                                         onChange={handleChange}
-                                                        className="form-radio h-4 w-4 text-indigo-600"
+                                                        className="sr-only"
                                                     />
-                                                    <span className="ml-2 text-sm text-gray-700">Online</span>
+                                                    <div className="border border-gray-300 rounded-lg p-3 text-center hover:border-indigo-400 transition">
+                                                        <span className="text-2xl">💻</span>
+                                                        <p className="text-sm font-medium text-gray-900 mt-1">Online</p>
+                                                    </div>
                                                 </label>
-                                                <label className="inline-flex items-center">
+                                                <label className={`cursor-pointer ${formData.mode === 'home' ? 'ring-2 ring-indigo-500' : ''}`}>
                                                     <input
                                                         type="radio"
                                                         name="mode"
                                                         value="home"
                                                         checked={formData.mode === 'home'}
                                                         onChange={handleChange}
-                                                        className="form-radio h-4 w-4 text-indigo-600"
+                                                        className="sr-only"
                                                     />
-                                                    <span className="ml-2 text-sm text-gray-700">Home Tuition</span>
+                                                    <div className="border border-gray-300 rounded-lg p-3 text-center hover:border-indigo-400 transition">
+                                                        <span className="text-2xl">🏠</span>
+                                                        <p className="text-sm font-medium text-gray-900 mt-1">Home</p>
+                                                    </div>
                                                 </label>
                                             </div>
                                         </div>
                                     )}
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">Message (Optional)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
                                         <textarea
-                                            name="message"
+                                            name="studentNotes"
                                             rows={2}
-                                            value={formData.message}
+                                            value={formData.studentNotes}
                                             onChange={handleChange}
-                                            placeholder="Any specific topics you want to cover?"
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                            placeholder="Any specific topics you want to focus on?"
+                                            className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                         />
                                     </div>
 
-                                    <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                                        <button
-                                            type="submit"
-                                            disabled={submitting}
-                                            className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm disabled:opacity-50"
-                                        >
-                                            {submitting ? 'Sending Request...' : 'Send Request'}
-                                        </button>
+                                    <div className="mt-6 flex gap-3">
                                         <button
                                             type="button"
                                             onClick={onClose}
-                                            className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                                            className="flex-1 inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
                                         >
                                             Cancel
                                         </button>
+                                        <button
+                                            type="submit"
+                                            disabled={submitting}
+                                            className="flex-1 inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {submitting ? (
+                                                <>
+                                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Confirming...
+                                                </>
+                                            ) : (
+                                                '✨ Confirm Demo (Free)'
+                                            )}
+                                        </button>
                                     </div>
                                 </form>
-                            </div>
-                        </div>
+
+                                <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                                    <p className="text-xs text-green-800 flex items-start gap-2">
+                                        <svg className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                        </svg>
+                                        <span><strong>Instant Confirmation!</strong> Your demo will be auto-confirmed. The tutor will reach out to you directly.</span>
+                                    </p>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
@@ -183,3 +281,4 @@ const RequestDemoModal = ({ tutor, onClose, onSuccess }) => {
 };
 
 export default RequestDemoModal;
+

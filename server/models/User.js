@@ -47,6 +47,18 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    // Demo tracking (for students)
+    demosUsed: {
+        type: Number,
+        default: 0
+    },
+    demoLimit: {
+        type: Number,
+        default: 3 // Admin configurable
+    },
+    lastDemoDate: {
+        type: Date
+    },
     isActive: {
         type: Boolean,
         default: true
