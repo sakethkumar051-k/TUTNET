@@ -73,12 +73,12 @@ const createBooking = async (req, res) => {
                     });
                 }
 
-                // Check if student can request trial with this tutor (1 per tutor rule)
+                // Check if student can request trial with this tutor (max 2 per tutor rule)
                 const canRequest = await Booking.canRequestTrial(finalStudentId, finalTutorId);
                 if (!canRequest) {
                     return res.status(400).json({
-                        message: 'You already have a trial booking with this tutor. Book a regular session instead!',
-                        code: 'TRIAL_EXISTS'
+                        message: 'You already have 2 trial bookings with this tutor. Book a regular session instead!',
+                        code: 'TRIAL_LIMIT_REACHED'
                     });
                 }
             }
@@ -135,25 +135,29 @@ const createBooking = async (req, res) => {
             }
         }
 
-        // Find or use current tutor relationship
-        let currentTutor = null;
-        if (currentTutorId) {
-            currentTutor = await CurrentTutor.findById(currentTutorId);
-        } else {
-            currentTutor = await CurrentTutor.findOne({
-                studentId: finalStudentId,
-                tutorId: finalTutorId,
-                subject: subject,
-                isActive: true
-            });
-        }
-
         // Calculate trial expiry (48 hours for pending trials)
         let trialExpiresAt = null;
         if (finalCategory === 'trial') {
             trialExpiresAt = new Date();
             trialExpiresAt.setHours(trialExpiresAt.getHours() + 48);
         }
+
+        // IMPORTANT: Only find/create CurrentTutor relationship for REGULAR sessions, NOT trials
+        let currentTutor = null;
+        if (finalCategory === 'session') {
+            // Only create permanent tutor relationship for regular bookings
+            if (currentTutorId) {
+                currentTutor = await CurrentTutor.findById(currentTutorId);
+            } else {
+                currentTutor = await CurrentTutor.findOne({
+                    studentId: finalStudentId,
+                    tutorId: finalTutorId,
+                    subject: subject,
+                    isActive: true
+                });
+            }
+        }
+        // For trials: currentTutor remains null, no permanent relationship created
 
         const booking = await Booking.create({
             studentId: finalStudentId,
@@ -169,8 +173,8 @@ const createBooking = async (req, res) => {
             bookingType: finalCategory === 'trial' ? 'demo' : 'regular'
         });
 
-        // If tutor created booking, update relationship stats
-        if (req.user.role === 'tutor' && currentTutor) {
+        // If tutor created booking AND it's a regular session, update relationship stats
+        if (req.user.role === 'tutor' && currentTutor && finalCategory === 'session') {
             currentTutor.totalSessionsBooked += 1;
             if (currentTutor.status === 'new') {
                 currentTutor.status = 'active';

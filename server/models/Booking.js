@@ -87,17 +87,18 @@ bookingSchema.virtual('isExpired').get(function () {
 
 // Helper method to check if student can request trial with this tutor
 bookingSchema.statics.canRequestTrial = async function (studentId, tutorId) {
-    // Check if student already has a trial (any status) with this tutor
-    const existingTrial = await this.findOne({
+    // Check how many trials student already has with this tutor (max 2)
+    const existingTrialsCount = await this.countDocuments({
         studentId,
         tutorId,
         bookingCategory: 'trial'
     });
 
-    return !existingTrial; // Can request if no existing trial found
+    // Allow max 2 trials per tutor-student pair
+    return existingTrialsCount < 2;
 };
 
-// Helper method to count active trials for a student
+// Helper method to count active trials for a student  
 bookingSchema.statics.countActiveTrials = async function (studentId) {
     return await this.countDocuments({
         studentId,
