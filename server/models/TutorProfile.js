@@ -23,6 +23,15 @@ const tutorProfileSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    mode: {
+        type: String,
+        enum: ['online', 'home', 'both'],
+        default: 'home'
+    },
+    languages: [{
+        type: String,
+        trim: true
+    }],
     bio: {
         type: String,
         trim: true

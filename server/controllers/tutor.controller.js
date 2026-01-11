@@ -31,12 +31,12 @@ const getTutors = async (req, res) => {
 
         // Find tutors matching profile criteria
         let tutorsQuery = TutorProfile.find(query).populate('userId', 'name email phone location isActive');
-        
+
         // Apply limit if provided
         if (limit) {
             tutorsQuery = tutorsQuery.limit(parseInt(limit));
         }
-        
+
         let tutors = await tutorsQuery;
 
         // Filter by area (which is in the User model)
@@ -105,9 +105,12 @@ const getMyProfile = async (req, res) => {
 // @desc    Update tutor profile
 // @route   PUT /api/tutors/profile
 // @access  Private (Tutor only)
+// @desc    Update tutor profile
+// @route   PUT /api/tutors/profile
+// @access  Private (Tutor only)
 const updateTutorProfile = async (req, res) => {
     try {
-        const { subjects, classes, hourlyRate, experienceYears, bio, availableSlots } = req.body;
+        const { subjects, classes, hourlyRate, experienceYears, bio, availableSlots, mode, languages, profilePicture } = req.body;
 
         const tutor = await TutorProfile.findOne({ userId: req.user.id });
 
@@ -115,16 +118,59 @@ const updateTutorProfile = async (req, res) => {
             return res.status(404).json({ message: 'Tutor profile not found' });
         }
 
-        tutor.subjects = subjects || tutor.subjects;
-        tutor.classes = classes || tutor.classes;
-        tutor.hourlyRate = hourlyRate || tutor.hourlyRate;
-        tutor.experienceYears = experienceYears || tutor.experienceYears;
-        tutor.bio = bio || tutor.bio;
-        tutor.availableSlots = availableSlots || tutor.availableSlots;
+        let requiresApproval = false;
+
+        // Check for critical changes that require re-approval
+        // 1. Profile Picture
+        if (profilePicture !== undefined) {
+            // Fetch user to check current picture
+            const user = await User.findById(req.user.id);
+            if (user.profilePicture !== profilePicture) {
+                requiresApproval = true;
+                user.profilePicture = profilePicture;
+                await user.save();
+            }
+        }
+
+        // Helper to compare arrays (simple sort and stringify)
+        const arraysEqual = (a, b) => {
+            if (!a || !b) return a === b;
+            return JSON.stringify(a.sort()) === JSON.stringify(b.sort());
+        };
+
+        // 2. Subjects
+        if (subjects && !arraysEqual(tutor.subjects, subjects)) {
+            requiresApproval = true;
+            tutor.subjects = subjects;
+        }
+
+        // 3. Classes
+        if (classes && !arraysEqual(tutor.classes, classes)) {
+            requiresApproval = true;
+            tutor.classes = classes;
+        }
+
+        // Update non-critical fields (always update)
+        if (hourlyRate) tutor.hourlyRate = hourlyRate;
+        if (experienceYears) tutor.experienceYears = experienceYears;
+        if (bio) tutor.bio = bio;
+        if (availableSlots) tutor.availableSlots = availableSlots;
+        if (mode) tutor.mode = mode;
+        if (languages) tutor.languages = languages;
+
+        // If explicitly submitting new critical data, reset approval status
+        // EXCEPT if it's the very first setup (where status might be 'pending' anyway)
+        // If it's already 'approved' and we change critical stuff -> 'pending'
+        if (requiresApproval && tutor.approvalStatus === 'approved') {
+            tutor.approvalStatus = 'pending';
+        }
 
         await tutor.save();
 
-        res.json(tutor);
+        res.json({
+            ...tutor.toObject(),
+            _requiresApproval: requiresApproval // Flag to tell frontend if status changed
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });

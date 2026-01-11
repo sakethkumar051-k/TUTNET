@@ -15,6 +15,11 @@ const bookingSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    bookingType: {
+        type: String,
+        enum: ['regular', 'demo'],
+        default: 'regular'
+    },
     preferredSchedule: {
         type: String, // Simple string for MVP e.g. "2023-10-27 10:00 AM"
         required: true

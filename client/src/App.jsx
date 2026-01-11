@@ -12,6 +12,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
 import FindTutors from './pages/FindTutors';
 import Footer from './components/Footer';
+import TutorProfilePage from './pages/TutorProfilePage';
 
 function App() {
     return (
@@ -25,37 +26,45 @@ function App() {
                             <Route path="/login" element={<Login />} />
                             <Route path="/register" element={<Register />} />
                             <Route path="/admin-login" element={<AdminLogin />} />
-                            <Route 
-                                path="/find-tutors" 
+                            <Route
+                                path="/find-tutors"
                                 element={
                                     <ProtectedRoute requiredRole="student">
                                         <FindTutors />
                                     </ProtectedRoute>
-                                } 
+                                }
                             />
-                            <Route 
-                                path="/tutor-dashboard" 
+                            <Route
+                                path="/tutor/:id"
+                                element={
+                                    <ProtectedRoute requiredRole="student">
+                                        <TutorProfilePage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/tutor-dashboard"
                                 element={
                                     <ProtectedRoute requiredRole="tutor">
                                         <TutorDashboard />
                                     </ProtectedRoute>
-                                } 
+                                }
                             />
-                            <Route 
-                                path="/student-dashboard" 
+                            <Route
+                                path="/student-dashboard"
                                 element={
                                     <ProtectedRoute requiredRole="student">
                                         <StudentDashboard />
                                     </ProtectedRoute>
-                                } 
+                                }
                             />
-                            <Route 
-                                path="/admin-dashboard" 
+                            <Route
+                                path="/admin-dashboard"
                                 element={
                                     <ProtectedRoute requiredRole="admin">
                                         <AdminDashboard />
                                     </ProtectedRoute>
-                                } 
+                                }
                             />
                         </Routes>
                         <Footer />

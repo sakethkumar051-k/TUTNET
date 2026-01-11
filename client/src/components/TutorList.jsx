@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useToast } from '../context/ToastContext';
 import api from '../utils/api';
 import TutorCard from './TutorCard';
-import BookingForm from './BookingForm';
+import BookingForm from './BookingForm'; // Keeping if needed or removing? User seems to replacing flow. 
+import RequestDemoModal from './RequestDemoModal';
 import TutorSearch from './TutorSearch';
 import LoadingSkeleton from './LoadingSkeleton';
 import EmptyState from './EmptyState';
@@ -43,8 +44,8 @@ const TutorList = () => {
         fetchTutors(filters);
     };
 
-    const handleBookingSuccess = () => {
-        showSuccess('Booking request sent successfully!');
+    const handleDemoSuccess = () => {
+        // Success message handled in modal
         setSelectedTutor(null);
     };
 
@@ -82,7 +83,7 @@ const TutorList = () => {
                         <TutorCard
                             key={tutor._id}
                             tutor={tutor}
-                            onBook={() => setSelectedTutor(tutor)}
+                            onRequestDemo={(t) => setSelectedTutor(t)}
                         />
                     ))}
                 </div>
@@ -90,11 +91,10 @@ const TutorList = () => {
 
             {/* Booking Modal */}
             {selectedTutor && (
-                <BookingForm
-                    tutorId={selectedTutor.userId?._id}
-                    tutorName={selectedTutor.userId?.name}
+                <RequestDemoModal
+                    tutor={selectedTutor}
                     onClose={() => setSelectedTutor(null)}
-                    onSuccess={handleBookingSuccess}
+                    onSuccess={handleDemoSuccess}
                 />
             )}
         </div>

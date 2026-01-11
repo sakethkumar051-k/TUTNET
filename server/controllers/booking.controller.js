@@ -8,7 +8,7 @@ const CurrentTutor = require('../models/CurrentTutor');
 // @access  Private (Student or Tutor)
 const createBooking = async (req, res) => {
     try {
-        const { tutorId, studentId, subject, preferredSchedule, sessionDate, currentTutorId } = req.body;
+        const { tutorId, studentId, subject, preferredSchedule, sessionDate, currentTutorId, bookingType } = req.body;
 
         let finalTutorId, finalStudentId;
 
@@ -45,7 +45,7 @@ const createBooking = async (req, res) => {
             // Verify this is a current student
             if (currentTutorId) {
                 const currentTutor = await CurrentTutor.findById(currentTutorId);
-                if (!currentTutor || currentTutor.tutorId.toString() !== finalTutorId || 
+                if (!currentTutor || currentTutor.tutorId.toString() !== finalTutorId ||
                     currentTutor.studentId.toString() !== finalStudentId) {
                     return res.status(403).json({ message: 'Not authorized to book for this student' });
                 }
@@ -105,7 +105,8 @@ const createBooking = async (req, res) => {
             preferredSchedule,
             sessionDate: parsedSessionDate,
             status: req.user.role === 'tutor' ? 'approved' : 'pending', // Tutors can auto-approve
-            currentTutorId: currentTutor?._id
+            currentTutorId: currentTutor?._id,
+            bookingType: bookingType || 'regular'
         });
 
         // If tutor created booking, update relationship stats
@@ -216,7 +217,7 @@ const approveBooking = async (req, res) => {
 
         booking.status = 'approved';
         booking.attendanceStatus = 'scheduled';
-        
+
         // Parse session date if not set
         if (!booking.sessionDate) {
             try {
@@ -229,7 +230,7 @@ const approveBooking = async (req, res) => {
                 booking.sessionDate = new Date();
             }
         }
-        
+
         await booking.save();
 
         // Create or update CurrentTutor relationship
