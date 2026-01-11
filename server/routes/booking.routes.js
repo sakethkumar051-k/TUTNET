@@ -6,12 +6,16 @@ const {
     cancelBooking,
     approveBooking,
     rejectBooking,
-    completeBooking
+    completeBooking,
+    getTrialStatus
 } = require('../controllers/booking.controller');
 const { protect } = require('../middleware/auth.middleware');
 const { authorize } = require('../middleware/role.middleware');
 
 router.use(protect);
+
+// Trial status check
+router.get('/trial-status/:tutorId', authorize('student'), getTrialStatus);
 
 // Allow both students and tutors to create bookings
 router.post('/', authorize('student', 'tutor'), createBooking);

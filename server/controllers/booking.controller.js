@@ -416,11 +416,56 @@ const completeBooking = async (req, res) => {
     }
 };
 
+// @desc    Get trial status between student and tutor
+// @route   GET /api/bookings/trial-status/:tutorId
+// @access  Private (Student)
+const getTrialStatus = async (req, res) => {
+    try {
+        const { tutorId } = req.params;
+        const studentId = req.user.id;
+
+        // Find any trial bookings between this student and tutor
+        const trials = await Booking.find({
+            studentId,
+            tutorId,
+            bookingCategory: 'trial'
+        }).sort({ createdAt: -1 });
+
+        if (trials.length === 0) {
+            return res.json({
+                status: null,
+                count: 0,
+                hasTriedTutor: false
+            });
+        }
+
+        const latestTrial = trials[0];
+
+        return res.json({
+            status: latestTrial.status,
+            count: trials.length,
+            maxReached: trials.length >= 2,
+            hasTriedTutor: true,
+            latestTrial: {
+                _id: latestTrial._id,
+                status: latestTrial.status,
+                subject: latestTrial.subject,
+                preferredSchedule: latestTrial.preferredSchedule,
+                createdAt: latestTrial.createdAt
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching trial status:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
     createBooking,
     getMyBookings,
     cancelBooking,
     approveBooking,
     rejectBooking,
-    completeBooking
+    completeBooking,
+    getTrialStatus
 };

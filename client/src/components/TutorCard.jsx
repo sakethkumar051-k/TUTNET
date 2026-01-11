@@ -3,10 +3,14 @@ import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
+import RegularBookingModal from './RegularBookingModal';
 
 const TutorCard = ({ tutor, onRequestDemo }) => {
     const [isFavorite, setIsFavorite] = useState(false);
     const [checkingFavorite, setCheckingFavorite] = useState(true);
+    const [trialStatus, setTrialStatus] = useState(null);
+    const [loadingTrialStatus, setLoadingTrialStatus] = useState(true);
+    const [showRegularBooking, setShowRegularBooking] = useState(false);
     const { user } = useAuth();
     const { showSuccess, showError } = useToast();
     const navigate = useNavigate();
@@ -14,10 +18,24 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
     useEffect(() => {
         if (user?.role === 'student' && tutor.userId?._id) {
             checkFavorite();
+            checkTrialStatus();
         } else {
             setCheckingFavorite(false);
+            setLoadingTrialStatus(false);
         }
     }, [user, tutor]);
+
+    const checkTrialStatus = async () => {
+        try {
+            const { data } = await api.get(`/bookings/trial-status/${tutor.userId._id}`);
+            setTrialStatus(data);
+        } catch (err) {
+            console.error('Failed to check trial status:', err);
+            setTrialStatus(null);
+        } finally {
+            setLoadingTrialStatus(false);
+        }
+    };
 
     const checkFavorite = async () => {
         try {
@@ -152,23 +170,101 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
                 )}
             </div>
 
+
             {/* Footer / Actions */}
-            <div className="p-4 border-t border-gray-50 mt-auto grid grid-cols-2 gap-3">
-                <button
-                    onClick={() => navigate(`/tutor/${tutor._id}`)}
-                    className="w-full py-2.5 px-4 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-semibold hover:bg-indigo-100 transition-colors"
-                >
-                    View Profile
-                </button>
-                <button
-                    onClick={() => onRequestDemo(tutor)}
-                    className="w-full py-2.5 px-4 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
-                >
-                    Request Demo
-                </button>
+            <div className="p-4 border-t border-gray-50 mt-auto space-y-2">
+                {user?.role === 'student' ? (
+                    <>
+                        {/* Primary Action - Smart Button */}
+                        {loadingTrialStatus ? (
+                            <button disabled className="w-full py-2.5 px-4 rounded-lg bg-gray-200 text-gray-500 text-sm font-semibold cursor-wait">
+                                Loading...
+                            </button>
+                        ) : !trialStatus || !trialStatus.hasTriedTutor ? (
+                            // No trial yet
+                            <button
+                                onClick={() => onRequestDemo(tutor)}
+                                className="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold hover:from-indigo-700 hover:to-purple-700 transition shadow-sm hover:shadow-md"
+                            >
+                                Try Free Demo Class
+                            </button>
+                        ) : trialStatus.status === 'pending' ? (
+                            // Trial pending
+                            <button
+                                disabled
+                                className="w-full py-2.5 px-4 rounded-lg bg-yellow-100 text-yellow-800 text-sm font-semibold cursor-not-allowed"
+                            >
+                                Free Demo Pending...
+                            </button>
+                        ) : trialStatus.status === 'approved' ? (
+                            // Trial scheduled
+                            <button
+                                onClick={() => navigate('/student-dashboard?tab=sessions')}
+                                className="w-full py-2.5 px-4 rounded-lg bg-green-100 text-green-800 text-sm font-semibold hover:bg-green-200 transition"
+                            >
+                                Demo Scheduled - View Details
+                            </button>
+                        ) : trialStatus.status === 'completed' ? (
+                            // Trial done - encourage booking
+                            <button
+                                onClick={() => setShowRegularBooking(true)}
+                                className="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm font-semibold hover:from-green-700 hover:to-emerald-700 transition shadow-sm hover:shadow-md"
+                            >
+                                Book Paid Session
+                            </button>
+                        ) : (
+                            // Default
+                            <button
+                                onClick={() => setShowRegularBooking(true)}
+                                className="w-full py-2.5 px-4 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition shadow-sm hover:shadow-md"
+                            >
+                                Book Session
+                            </button>
+                        )}
+
+                        {/* Secondary Actions */}
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                onClick={() => navigate(`/tutor/${tutor._id}`)}
+                                className="py-2 px-3 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-medium hover:bg-indigo-100 transition"
+                            >
+                                View Profile
+                            </button>
+                            {!loadingTrialStatus && (!trialStatus || !trialStatus.hasTriedTutor) && (
+                                <button
+                                    onClick={() => setShowRegularBooking(true)}
+                                    className="py-2 px-3 rounded-lg border border-indigo-300 text-indigo-600 text-xs font-medium hover:bg-indigo-50 transition"
+                                >
+                                    Book Paid Session
+                                </button>
+                            )}
+                        </div>
+                    </>
+                ) : (
+                    // Non-student view
+                    <button
+                        onClick={() => navigate(`/tutor/${tutor._id}`)}
+                        className="w-full py-2.5 px-4 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-semibold hover:bg-indigo-100 transition-colors"
+                    >
+                        View Profile
+                    </button>
+                )}
             </div>
+
+            {/* Regular Booking Modal */}
+            {showRegularBooking && (
+                <RegularBookingModal
+                    tutor={tutor}
+                    onClose={() => setShowRegularBooking(false)}
+                    onSuccess={() => {
+                        setShowRegularBooking(false);
+                        checkTrialStatus(); // Refresh status
+                    }}
+                />
+            )}
         </div>
     );
 };
 
 export default TutorCard;
+
