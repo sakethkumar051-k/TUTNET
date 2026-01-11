@@ -1,24 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
-import TutorProfileForm from '../components/TutorProfileForm';
-import BookingList from '../components/BookingList';
-import ReviewList from '../components/ReviewList';
-import DashboardStats from '../components/DashboardStats';
-import ProgressReports from '../components/ProgressReports';
-import AttendanceTracker from '../components/AttendanceTracker';
-import StudyMaterials from '../components/StudyMaterials';
-import MyCurrentStudents from '../components/MyCurrentStudents';
-import TodaysSessions from '../components/TodaysSessions';
-import ProgressAnalytics from '../components/ProgressAnalytics';
-import SessionManagementDashboard from '../components/SessionManagementDashboard';
-import LoadingSkeleton from '../components/LoadingSkeleton';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
+
+// Components
+import Sidebar from '../components/Sidebar';
+import SessionsPage from './SessionsPage';
+import DashboardStats from '../components/DashboardStats';
+import MyCurrentStudents from '../components/MyCurrentStudents';
+import StudyMaterials from '../components/StudyMaterials';
+import ReviewList from '../components/ReviewList';
+import AttendanceTracker from '../components/AttendanceTracker';
+import ProgressAnalytics from '../components/ProgressAnalytics';
+import ProgressReports from '../components/ProgressReports';
+import TutorProfileForm from '../components/TutorProfileForm';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 
 const TutorDashboard = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'today');
+    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'dashboard');
     const [stats, setStats] = useState(null);
     const [tutorProfile, setTutorProfile] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -26,18 +27,35 @@ const TutorDashboard = () => {
 
     // Sync activeTab with URL search params
     useEffect(() => {
-        const tabFromUrl = searchParams.get('tab') || 'today';
+        const tabFromUrl = searchParams.get('tab') || 'dashboard';
         if (tabFromUrl !== activeTab) {
             setActiveTab(tabFromUrl);
         }
     }, [searchParams]);
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        if (activeTab === 'dashboard') {
+            fetchData();
+        }
+    }, [activeTab]);
+
+    const handleTabChange = (tabId) => {
+        setActiveTab(tabId);
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.set('tab', tabId);
+
+        // Clean up unneeded params
+        if (!['students', 'resources'].includes(tabId)) {
+            newSearchParams.delete('studentId');
+            newSearchParams.delete('currentTutorId');
+        }
+
+        navigate(`/tutor-dashboard?${newSearchParams.toString()}`, { replace: true });
+    };
 
     const fetchData = async () => {
         try {
+            setLoading(true);
             // Fetch bookings
             const { data: bookings } = await api.get('/bookings/mine');
 
@@ -77,47 +95,35 @@ const TutorDashboard = () => {
 
     const dashboardStats = stats ? [
         {
-            label: 'Total Bookings',
-            value: stats.total,
-            icon: '📚',
-            bgColor: 'bg-blue-100',
-            iconColor: 'text-blue-600'
+            label: 'Upcoming Sessions',
+            value: stats.approved,
+            icon: '📅',
+            bgColor: 'bg-indigo-50',
+            iconColor: 'text-indigo-600'
         },
         {
             label: 'Pending Requests',
             value: stats.pending,
             icon: '⏳',
-            bgColor: 'bg-yellow-100',
-            iconColor: 'text-yellow-600'
+            bgColor: 'bg-amber-50',
+            iconColor: 'text-amber-600'
         },
         {
-            label: 'Average Rating',
-            value: stats.rating > 0 ? `${stats.rating} ⭐` : 'No reviews',
+            label: 'Rating',
+            value: stats.rating > 0 ? `${stats.rating} ⭐` : 'N/A',
             icon: '⭐',
-            bgColor: 'bg-yellow-100',
+            bgColor: 'bg-yellow-50',
             iconColor: 'text-yellow-600',
             footer: `${stats.reviewCount} review${stats.reviewCount !== 1 ? 's' : ''}`
         },
         {
-            label: 'Completed Sessions',
+            label: 'Completed',
             value: stats.completed,
             icon: '✅',
-            bgColor: 'bg-green-100',
-            iconColor: 'text-green-600'
+            bgColor: 'bg-emerald-50',
+            iconColor: 'text-emerald-600'
         }
     ] : [];
-
-    const tabs = [
-        { id: 'today', label: "Today's Sessions", icon: '📅' },
-        { id: 'current-students', label: 'My Current Students', icon: '👨‍🎓' },
-        { id: 'sessions', label: 'Session Management', icon: '📆' },
-        { id: 'bookings', label: 'All Bookings', icon: '📋' },
-        { id: 'profile', label: 'Edit Profile', icon: '✏️' },
-        { id: 'study-materials', label: 'My Materials', icon: '📚' },
-        { id: 'progress', label: 'Progress Reports', icon: '📊' },
-        { id: 'attendance', label: 'Attendance', icon: '✅' },
-        { id: 'reviews', label: 'My Reviews', icon: '⭐' }
-    ];
 
     const getApprovalBadge = () => {
         if (!stats) return null;
@@ -149,116 +155,145 @@ const TutorDashboard = () => {
         );
     };
 
-    return (
-        <div className="h-screen bg-gray-50 flex overflow-hidden">
-            {/* Left Sidebar Navigation */}
-            <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
-                <div className="p-4 border-b border-gray-200 flex-shrink-0">
-                    <h1 className="text-xl font-bold text-gray-900">Tutor Dashboard</h1>
-                    <p className="text-xs text-gray-500 mt-1">
-                        Welcome, {user?.name}!
-                    </p>
-                    <div className="mt-3">
-                        {getApprovalBadge()}
-                    </div>
-                </div>
-                <nav className="flex-1 overflow-y-auto p-2" role="navigation" aria-label="Dashboard navigation">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => {
-                                setActiveTab(tab.id);
-                                // Update URL without navigation
-                                const newSearchParams = new URLSearchParams(searchParams);
-                                newSearchParams.set('tab', tab.id);
-                                // Remove studentId and currentTutorId when switching tabs (unless it's progress or sessions)
-                                if (tab.id !== 'progress' && tab.id !== 'sessions') {
-                                    newSearchParams.delete('studentId');
-                                    newSearchParams.delete('currentTutorId');
-                                }
-                                navigate(`/tutor-dashboard?${newSearchParams.toString()}`, { replace: true });
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    setActiveTab(tab.id);
-                                    const newSearchParams = new URLSearchParams(searchParams);
-                                    newSearchParams.set('tab', tab.id);
-                                    if (tab.id !== 'progress' && tab.id !== 'sessions') {
-                                        newSearchParams.delete('studentId');
-                                        newSearchParams.delete('currentTutorId');
-                                    }
-                                    navigate(`/tutor-dashboard?${newSearchParams.toString()}`, { replace: true });
-                                }
-                            }}
-                            aria-current={activeTab === tab.id ? 'page' : undefined}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                                activeTab === tab.id
-                                    ? 'bg-indigo-50 text-indigo-600 font-semibold border-l-4 border-indigo-600 shadow-sm'
-                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                            }`}
-                        >
-                            <span className="text-lg" aria-hidden="true">{tab.icon}</span>
-                            <span className="text-sm">{tab.label}</span>
-                        </button>
-                    ))}
-                </nav>
-            </div>
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'sessions':
+                return <SessionsPage />;
 
-            {/* Main Content Area */}
-            <div className="flex-1 overflow-y-auto">
-                <div className="px-4 sm:px-6 lg:px-8 py-6">
-                    {/* Approval Status Alert */}
-                    {stats && stats.approvalStatus === 'pending' && (
-                        <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <span className="text-yellow-400 text-xl">⚠️</span>
-                                </div>
-                                <div className="ml-3">
-                                    <p className="text-sm text-yellow-700">
-                                        Your profile is pending admin approval. You will be visible to students once approved.
+            case 'students':
+                return (
+                    <div className="space-y-6">
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h2 className="text-xl font-bold text-gray-900 mb-6">My Students</h2>
+                            <MyCurrentStudents />
+                        </div>
+                    </div>
+                );
+
+            case 'resources':
+                return (
+                    <div className="space-y-6">
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h2 className="text-xl font-bold text-gray-900 mb-4">My Materials</h2>
+                            <StudyMaterials />
+                        </div>
+                    </div>
+                );
+
+            case 'profile':
+                return (
+                    <div className="space-y-6">
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h2 className="text-xl font-bold text-gray-900 mb-6">Edit Profile</h2>
+                            <TutorProfileForm />
+                        </div>
+
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h2 className="text-xl font-bold text-gray-900 mb-6">Attendance & Reviews</h2>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <AttendanceTracker />
+                                <ReviewList tutorId={user?._id} />
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            case 'dashboard':
+            default:
+                return (
+                    <div className="max-w-5xl mx-auto space-y-8">
+                        {/* Welcome Header */}
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">
+                                    Welcome back, {user?.name?.split(' ')[0]}! 👋
+                                </h1>
+                                <p className="text-gray-500 mt-1">
+                                    You have {stats?.approved || 0} upcoming sessions scheduled.
+                                </p>
+                            </div>
+                            {getApprovalBadge()}
+                        </div>
+
+                        {/* Status Alert */}
+                        {stats && stats.approvalStatus === 'pending' && (
+                            <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg flex items-start">
+                                <span className="text-amber-500 text-xl mr-3">⚠️</span>
+                                <div>
+                                    <p className="text-sm font-medium text-amber-800">Account Pending Approval</p>
+                                    <p className="text-sm text-amber-700 mt-1">
+                                        Your profile is currently under review. You'll be visible to students once approved.
                                     </p>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {/* Statistics */}
-                    {!loading && stats && (
-                        <div className="mb-6">
-                            <DashboardStats stats={dashboardStats} />
-                        </div>
-                    )}
+                        {/* Actionable Stats */}
+                        {!loading && stats && (
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                {dashboardStats.map((stat, index) => (
+                                    <div key={index} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between transition-transform hover:-translate-y-1">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                                                <span className={`text-xl ${stat.iconColor}`}>{stat.icon}</span>
+                                            </div>
+                                            {stat.footer && <span className="text-xs text-gray-400">{stat.footer}</span>}
+                                        </div>
+                                        <div>
+                                            <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                                            <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
-                    {/* Loading State for Stats */}
-                    {loading && (
-                        <div className="mb-6">
-                            <LoadingSkeleton type="stats" count={4} />
-                        </div>
-                    )}
+                        {/* Interactive Sections */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Recent Student Progress */}
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="font-bold text-gray-900">Student Progress Reports</h3>
+                                    <button
+                                        onClick={() => handleTabChange('students')}
+                                        className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                                    >
+                                        View All Students →
+                                    </button>
+                                </div>
+                                <div className="h-64 overflow-hidden">
+                                    <p className="text-sm text-gray-500 mb-4">Select a student to see detailed analytics.</p>
+                                    <ProgressReports />
+                                </div>
+                            </div>
 
-                    {/* Tab Content */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 min-h-[400px]">
-                    {activeTab === 'today' && <TodaysSessions />}
-                    {activeTab === 'current-students' && <MyCurrentStudents />}
-                    {activeTab === 'sessions' && <SessionManagementDashboard />}
-                    {activeTab === 'bookings' && <BookingList role="tutor" />}
-                    {activeTab === 'profile' && <TutorProfileForm />}
-                    {activeTab === 'study-materials' && <StudyMaterials />}
-                    {activeTab === 'progress' && (
-                        searchParams.get('studentId') ? (
-                            <ProgressAnalytics />
-                        ) : (
-                            <ProgressReports />
-                        )
-                    )}
-                    {activeTab === 'attendance' && <AttendanceTracker />}
-                    {activeTab === 'reviews' && (
-                        <ReviewList tutorId={user?._id} />
-                    )}
+                            {/* Quick Actions / Attendance Placeholder */}
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                                <h3 className="font-bold text-gray-900 mb-6">Recent Activity</h3>
+                                <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                                    <span className="text-4xl mb-2">📊</span>
+                                    <p>Activity timeline coming soon</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                );
+        }
+    };
+
+    return (
+        <div className="h-screen bg-gray-50 flex overflow-hidden font-sans">
+            <Sidebar
+                user={user}
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+            />
+
+            {/* Main Content Area */}
+            <div className="flex-1 overflow-y-auto">
+                <main className="px-4 sm:px-8 py-8 min-h-full">
+                    {renderContent()}
+                </main>
             </div>
         </div>
     );
