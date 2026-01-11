@@ -10,13 +10,31 @@ const notificationSchema = new mongoose.Schema({
     type: {
         type: String,
         enum: [
+            // Student notifications
             'booking_approved',
             'booking_rejected',
             'demo_accepted',
+            'demo_rejected',
             'session_reminder',
+            'session_starting_soon',
             'session_completed',
+            'progress_report_added',
+            'tutor_unavailable',
+            'booking_cancelled',
+
+            // Tutor notifications
+            'new_booking_request',
+            'new_trial_request',
+            'new_review',
             'payment_received',
-            // Legacy types
+            'student_cancellation',
+
+            // Admin notifications
+            'new_tutor_registration',
+            'tutor_pending_approval',
+            'system_alert',
+
+            // Legacy types (keep for backwards compatibility)
             'booking',
             'review',
             'approval',

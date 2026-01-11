@@ -54,7 +54,17 @@ try {
     app.use('/api/attendance', require('./routes/attendance.routes'));
     app.use('/api/current-tutors', require('./routes/currentTutor.routes'));
     app.use('/api/session-feedback', require('./routes/sessionFeedback.routes'));
-    app.use('/api/notifications', require('./routes/notification.routes'));
+
+    // Notification routes with specific error handling
+    try {
+        const notificationRoutes = require('./routes/notification.routes');
+        app.use('/api/notifications', notificationRoutes);
+        console.log('✓ Notification routes loaded successfully');
+    } catch (notifError) {
+        console.error('✗ Error loading notification routes:', notifError.message);
+        console.error(notifError.stack);
+    }
+
     console.log('All routes loaded successfully');
 } catch (error) {
     console.error('Error loading routes:', error);

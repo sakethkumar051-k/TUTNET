@@ -187,6 +187,24 @@ const createBooking = async (req, res) => {
             .populate('studentId', 'name email')
             .populate('tutorId', 'name email');
 
+        // Send notification to tutor (only if student created the booking)
+        if (req.user.role === 'student') {
+            const notificationType = finalCategory === 'trial' ? 'new_trial_request' : 'new_booking_request';
+            const notificationTitle = finalCategory === 'trial' ? 'New Trial Request!' : 'New Booking Request';
+            const notificationMessage = finalCategory === 'trial'
+                ? `${populatedBooking.studentId.name} requested a free demo class for ${subject}`
+                : `${populatedBooking.studentId.name} requested a session for ${subject}`;
+
+            await createNotification({
+                userId: finalTutorId,
+                type: notificationType,
+                title: notificationTitle,
+                message: notificationMessage,
+                link: '/tutor-dashboard?tab=sessions',
+                bookingId: booking._id
+            });
+        }
+
         res.status(201).json(populatedBooking);
     } catch (error) {
         console.error(error);
@@ -395,12 +413,18 @@ const rejectBooking = async (req, res) => {
             .populate('studentId', 'name email')
             .populate('tutorId', 'name email');
 
-        // Send notification to student
+        // Send notification to student with appropriate type
+        const notificationType = booking.bookingCategory === 'trial' ? 'demo_rejected' : 'booking_rejected';
+        const notificationTitle = booking.bookingCategory === 'trial' ? 'Demo Request Declined' : 'Booking Update';
+        const notificationMessage = booking.bookingCategory === 'trial'
+            ? `Your demo request with ${populatedBooking.tutorId.name} was declined. Try another tutor?`
+            : `Your booking request with ${populatedBooking.tutorId.name} was declined. Try another time slot?`;
+
         await createNotification({
             userId: booking.studentId,
-            type: 'booking_rejected',
-            title: 'Booking Update',
-            message: `Your booking request with ${populatedBooking.tutorId.name} was declined. Try another time slot?`,
+            type: notificationType,
+            title: notificationTitle,
+            message: notificationMessage,
             link: '/find-tutors',
             bookingId: booking._id
         });
