@@ -369,6 +369,18 @@ const markAttendance = async (req, res) => {
         await feedback.save();
 
         // Create/update attendance record
+        // Map frontend status to valid enum values
+        let attendanceStatusValue = 'present'; // default
+        const statusLower = (status || '').toLowerCase();
+
+        if (statusLower === 'completed' || statusLower === 'present') {
+            attendanceStatusValue = 'present';
+        } else if (statusLower === 'student_absent' || statusLower === 'absent') {
+            attendanceStatusValue = 'absent';
+        } else if (statusLower === 'pending') {
+            attendanceStatusValue = 'pending';
+        }
+
         const attendance = await Attendance.findOneAndUpdate(
             {
                 bookingId: req.params.bookingId,
@@ -379,7 +391,7 @@ const markAttendance = async (req, res) => {
                 studentId: booking.studentId,
                 tutorId: booking.tutorId,
                 sessionDate: booking.sessionDate || booking.createdAt,
-                status: status === 'completed' ? 'present' : status === 'student_absent' ? 'absent' : 'present',
+                status: attendanceStatusValue,
                 duration: duration || 60,
                 notes,
                 markedBy: req.user.id
