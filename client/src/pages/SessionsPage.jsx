@@ -10,6 +10,7 @@ import BookingList from '../components/BookingList';
 import SessionDetailsModal from '../components/SessionDetailsModal';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import EmptyState from '../components/EmptyState';
+import SessionManagementDashboard from '../components/SessionManagementDashboard';
 
 const SessionsPage = () => {
     const { user } = useAuth();
@@ -20,7 +21,7 @@ const SessionsPage = () => {
     const [loading, setLoading] = useState(true);
 
     // UI State
-    const [activeTab, setActiveTab] = useState('today');
+    const [activeTab, setActiveTab] = useState('calendar'); // Default to calendar if that's what users prefer
     const [selectedSession, setSelectedSession] = useState(null);
     const [nextSession, setNextSession] = useState(null);
     const [stats, setStats] = useState({ today: 0, upcoming: 0, completed: 0, requests: 0 });
@@ -137,9 +138,15 @@ const SessionsPage = () => {
     const currentList = getFilteredSessions();
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 pb-12">
-            {/* Header Area */}
-            {nextSession && (
+        <div className="max-w-6xl mx-auto space-y-8 pb-12">
+            {/* Header Area - Keep simple */}
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900">Your Sessions</h1>
+                <p className="text-gray-500 mt-1">Manage current classes, check calendar, and review history.</p>
+            </div>
+
+            {/* Next Session - Only show if valid */}
+            {nextSession && activeTab !== 'calendar' && (
                 <div className="animate-fade-in-up">
                     <NextSessionCard
                         session={nextSession}
@@ -151,10 +158,11 @@ const SessionsPage = () => {
             {/* Tabs */}
             <div className="flex items-center space-x-1 border-b border-gray-200 overflow-x-auto no-scrollbar">
                 {[
-                    { id: 'today', label: 'Today', count: stats.today },
+                    { id: 'calendar', label: 'Calendar', count: 0 },
+                    { id: 'today', label: 'Today List', count: stats.today },
                     { id: 'upcoming', label: 'Upcoming', count: stats.upcoming },
-                    { id: 'completed', label: 'Completed', count: stats.completed },
-                    { id: 'requests', label: 'Requests', count: stats.requests }
+                    { id: 'requests', label: 'Requests', count: stats.requests },
+                    { id: 'completed', label: 'History', count: stats.completed },
                 ].map(tab => (
                     <button
                         key={tab.id}
@@ -180,11 +188,12 @@ const SessionsPage = () => {
             <div className="min-h-[400px]">
                 {loading ? (
                     <LoadingSkeleton type="list" count={4} />
+                ) : activeTab === 'calendar' ? (
+                    <div className="animate-fade-in">
+                        <SessionManagementDashboard />
+                    </div>
                 ) : activeTab === 'requests' ? (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                        {/* We can reuse BookingList here, but might want to style it to match if possible 
-                             For now, wrapping it cleanly.
-                         */}
                         <BookingList role={user?.role} />
                     </div>
                 ) : (
