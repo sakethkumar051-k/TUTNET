@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import { getBaseURL } from '../utils/api';
 
 const CompleteProfile = () => {
     const [searchParams] = useSearchParams();
@@ -83,7 +84,7 @@ const CompleteProfile = () => {
         setLoading(true);
 
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+            const apiUrl = getBaseURL();
 
             // Format subjects for tutor
             const subjectsArray = role === 'tutor'

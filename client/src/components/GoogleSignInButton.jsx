@@ -1,10 +1,11 @@
 import React from 'react';
+import { getBaseURL } from '../utils/api';
 
 const GoogleSignInButton = ({ text = "Continue with Google" }) => {
     const handleGoogleSignIn = () => {
         // Redirect to backend OAuth endpoint
-        // Use environment variable or fallback to localhost
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        // Use centralized helper to ensure correct path (localhost vs production)
+        const apiUrl = getBaseURL();
         window.location.href = `${apiUrl}/auth/google`;
     };
 

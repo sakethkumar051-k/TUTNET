@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 // Ensure baseURL always ends with /api
-const getBaseURL = () => {
+export const getBaseURL = () => {
     const envURL = import.meta.env.VITE_API_URL;
     let baseURL;
-    
+
     if (envURL) {
         // If VITE_API_URL is provided, ensure it ends with /api
         baseURL = envURL.endsWith('/api') ? envURL : `${envURL.replace(/\/$/, '')}/api`;
@@ -12,11 +12,10 @@ const getBaseURL = () => {
         // Default to localhost with /api for development
         baseURL = 'http://localhost:5001/api';
     }
-    
+
     // Log to help debug (both dev and prod)
     console.log('API Base URL:', baseURL);
-    console.log('VITE_API_URL env var:', envURL || 'Not set (using default)');
-    
+
     return baseURL;
 };
 
