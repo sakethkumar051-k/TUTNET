@@ -339,7 +339,17 @@ const markAttendance = async (req, res) => {
         }
 
         // Update booking attendance status
-        booking.attendanceStatus = status;
+        // Map status from frontend to valid enum values for booking
+        const statusLower = (status || '').toLowerCase();
+        let bookingAttendanceStatus = 'pending';
+
+        if (statusLower === 'completed' || statusLower === 'present') {
+            bookingAttendanceStatus = 'present';
+        } else if (statusLower === 'student_absent' || statusLower === 'absent') {
+            bookingAttendanceStatus = 'absent';
+        }
+
+        booking.attendanceStatus = bookingAttendanceStatus;
         if (duration) booking.duration = duration;
         await booking.save();
 
