@@ -457,7 +457,7 @@ const completeBooking = async (req, res) => {
         }
 
         booking.status = 'completed';
-        booking.attendanceStatus = 'completed';
+        // AttendanceStatus should already be 'present' or 'absent' - don't change it
         await booking.save();
 
         // Update CurrentTutor stats
