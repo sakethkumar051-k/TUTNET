@@ -21,20 +21,12 @@ const Sidebar = ({ user, activeTab, onTabChange }) => {
 
     return (
         <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full flex-shrink-0">
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-6 border-b border-gray-200 flex justify-center lg:justify-start">
                 <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                    <span className="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tight">
                         TutNet
                     </span>
                 </Link>
-                <p className="text-xs text-gray-500 mt-2 font-medium">
-                    {user?.name}
-                </p>
-                <div className="mt-1">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 capitalize">
-                        {user?.role}
-                    </span>
-                </div>
             </div>
 
             <nav className="flex-1 overflow-y-auto p-4 space-y-1">
@@ -43,8 +35,8 @@ const Sidebar = ({ user, activeTab, onTabChange }) => {
                         key={item.id}
                         onClick={() => onTabChange(item.id)}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium ${activeTab === item.id
-                                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
-                                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 icon-grayscale'
+                            ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 icon-grayscale'
                             }`}
                     >
                         <span className="text-xl">{item.icon}</span>

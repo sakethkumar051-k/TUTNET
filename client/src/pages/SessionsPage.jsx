@@ -1,78 +1,222 @@
 import { useState, useEffect } from 'react';
-import BookingList from '../components/BookingList';
-import TodaysSessions from '../components/TodaysSessions';
-import SessionHistory from '../components/SessionHistory';
-import SessionManagementDashboard from '../components/SessionManagementDashboard'; // The calendar view
+import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+
+// Components
+import SessionTile from '../components/SessionTile';
+import NextSessionCard from '../components/NextSessionCard';
+import BookingList from '../components/BookingList';
+import SessionDetailsModal from '../components/SessionDetailsModal';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import EmptyState from '../components/EmptyState';
 
 const SessionsPage = () => {
-    const [view, setView] = useState('timeline'); // timeline, calendar, requests, history
     const { user } = useAuth();
+    const { showSuccess, showError } = useToast();
+
+    // Data State
+    const [allSessions, setAllSessions] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // UI State
+    const [activeTab, setActiveTab] = useState('today');
+    const [selectedSession, setSelectedSession] = useState(null);
+    const [nextSession, setNextSession] = useState(null);
+    const [stats, setStats] = useState({ today: 0, upcoming: 0, completed: 0, requests: 0 });
+
+    useEffect(() => {
+        fetchSessions();
+        const interval = setInterval(fetchSessions, 5 * 60 * 1000); // 5 min refresh
+        return () => clearInterval(interval);
+    }, []);
+
+    const fetchSessions = async () => {
+        setLoading(true);
+        try {
+            const { data } = await api.get('/bookings/mine');
+            processSessions(data);
+        } catch (err) {
+            console.error(err);
+            showError('Failed to load sessions');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const processSessions = (data) => {
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+
+        // 1. Sort by Date
+        const sorted = [...data].sort((a, b) => {
+            const dateA = a.sessionDate ? new Date(a.sessionDate) : new Date(a.createdAt);
+            const dateB = b.sessionDate ? new Date(b.sessionDate) : new Date(b.createdAt);
+            return dateA - dateB; // Ascending for upcoming logic
+        });
+
+        setAllSessions(sorted);
+
+        // 2. Find Next Session (First approved upcoming or currently happening)
+        const upcomingApproved = sorted.filter(s =>
+            s.status === 'approved' &&
+            s.sessionDate &&
+            new Date(s.sessionDate) > new Date(now.getTime() - 60 * 60 * 1000) // Not older than 1 hour ago
+        );
+
+        // Find the closest one
+        const next = upcomingApproved.find(s => new Date(s.sessionDate) > new Date()) || upcomingApproved[0];
+        setNextSession(next || null);
+
+        // 3. Calc Stats for tabs
+        const todayCount = sorted.filter(s =>
+            s.sessionDate?.startsWith(todayStr) && s.status === 'approved'
+        ).length;
+
+        const upcomingCount = sorted.filter(s =>
+            s.status === 'approved' &&
+            s.sessionDate &&
+            new Date(s.sessionDate) > now &&
+            !s.sessionDate.startsWith(todayStr)
+        ).length;
+
+        const completedCount = sorted.filter(s => s.status === 'completed').length;
+        const requestsCount = sorted.filter(s => s.status === 'pending').length;
+
+        setStats({ today: todayCount, upcoming: upcomingCount, completed: completedCount, requests: requestsCount });
+    };
+
+    const handleAction = async (session, type) => {
+        if (type === 'view') {
+            setSelectedSession(session);
+        } else if (type === 'join') {
+            // Auto-mark attendance logic
+            try {
+                // Only mark if not already marked/completed
+                if (session.status === 'approved' && !session.attendanceStatus) {
+                    await api.post(`/session-feedback/attendance/${session._id}`, { status: 'present' });
+                    showSuccess('Attendance marked automatically! Have a great session.');
+                    // Refresh data silently
+                    fetchSessions();
+                }
+            } catch (err) {
+                // Ignore error if already marked or network issue, shouldn't block joining
+                console.log('Attendance auto-mark skipped or failed', err);
+            }
+        }
+    };
+
+    // Filter sessions for the current tab
+    const getFilteredSessions = () => {
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+
+        switch (activeTab) {
+            case 'today':
+                return allSessions.filter(s =>
+                    s.sessionDate?.startsWith(todayStr) &&
+                    ['approved', 'completed'].includes(s.status)
+                );
+            case 'upcoming':
+                return allSessions.filter(s =>
+                    s.status === 'approved' &&
+                    s.sessionDate &&
+                    new Date(s.sessionDate) > now &&
+                    !s.sessionDate.startsWith(todayStr)
+                );
+            case 'completed':
+                // Show completed (descending order for history)
+                return allSessions
+                    .filter(s => s.status === 'completed')
+                    .sort((a, b) => new Date(b.sessionDate) - new Date(a.sessionDate));
+            default: // requests handled by BookingList component
+                return [];
+        }
+    };
+
+    const currentList = getFilteredSessions();
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Your Sessions</h1>
-                    <p className="text-gray-500 mt-1">Manage your schedule and bookings</p>
+        <div className="max-w-5xl mx-auto space-y-8 pb-12">
+            {/* Header Area */}
+            {nextSession && (
+                <div className="animate-fade-in-up">
+                    <NextSessionCard
+                        session={nextSession}
+                        onJoin={(s) => handleAction(s, 'join')}
+                    />
                 </div>
+            )}
 
-                <div className="flex bg-gray-100 p-1 rounded-lg">
-                    {[
-                        { id: 'timeline', label: 'Timeline' },
-                        { id: 'calendar', label: 'Calendar' },
-                        { id: 'requests', label: 'Requests' },
-                        { id: 'history', label: 'History' }
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setView(tab.id)}
-                            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${view === tab.id
-                                    ? 'bg-white text-indigo-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
-                                }`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
+            {/* Tabs */}
+            <div className="flex items-center space-x-1 border-b border-gray-200 overflow-x-auto no-scrollbar">
+                {[
+                    { id: 'today', label: 'Today', count: stats.today },
+                    { id: 'upcoming', label: 'Upcoming', count: stats.upcoming },
+                    { id: 'completed', label: 'Completed', count: stats.completed },
+                    { id: 'requests', label: 'Requests', count: stats.requests }
+                ].map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`
+                            px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex items-center gap-2
+                            ${activeTab === tab.id
+                                ? 'border-indigo-600 text-indigo-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'}
+                        `}
+                    >
+                        {tab.label}
+                        {tab.count > 0 && (
+                            <span className={`px-2 py-0.5 rounded-full text-xs ${activeTab === tab.id ? 'bg-indigo-100' : 'bg-gray-100'}`}>
+                                {tab.count}
+                            </span>
+                        )}
+                    </button>
+                ))}
             </div>
 
-            <div className="min-h-[500px]">
-                {view === 'timeline' && (
-                    <div className="space-y-8">
-                        {/* Timeline focuses on: Today's immediate actions */}
-                        <section>
-                            {/* <h2 className="text-lg font-semibold text-gray-900 mb-4 px-1">Happening Today</h2> */}
-                            <TodaysSessions />
-                        </section>
-                    </div>
-                )}
-
-                {view === 'calendar' && (
-                    <SessionManagementDashboard />
-                )}
-
-                {view === 'requests' && (
+            {/* Content Area */}
+            <div className="min-h-[400px]">
+                {loading ? (
+                    <LoadingSkeleton type="list" count={4} />
+                ) : activeTab === 'requests' ? (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div className="p-6 border-b border-gray-100">
-                            <h2 className="text-lg font-semibold text-gray-900">Booking Requests</h2>
-                            <p className="text-sm text-gray-500">
-                                {user?.role === 'tutor'
-                                    ? 'Approve or reject incoming session requests'
-                                    : 'Track status of your requested sessions'}
-                            </p>
-                        </div>
-                        <div className="p-0">
-                            <BookingList role={user?.role} />
-                        </div>
+                        {/* We can reuse BookingList here, but might want to style it to match if possible 
+                             For now, wrapping it cleanly.
+                         */}
+                        <BookingList role={user?.role} />
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {currentList.length === 0 ? (
+                            <EmptyState
+                                icon={activeTab === 'completed' ? '🎓' : '📅'}
+                                title={`No ${activeTab} sessions`}
+                                description={`You don't have any ${activeTab} sessions at the moment.`}
+                            />
+                        ) : (
+                            currentList.map(session => (
+                                <SessionTile
+                                    key={session._id}
+                                    session={session}
+                                    onAction={handleAction}
+                                    actionLabel={activeTab === 'completed' ? 'View Report' : 'Details'}
+                                />
+                            ))
+                        )}
                     </div>
                 )}
-
-                {view === 'history' && (
-                    <SessionHistory />
-                )}
             </div>
+
+            {/* Modal */}
+            {selectedSession && (
+                <SessionDetailsModal
+                    session={selectedSession}
+                    onClose={() => setSelectedSession(null)}
+                    onUpdate={fetchSessions}
+                />
+            )}
         </div>
     );
 };
