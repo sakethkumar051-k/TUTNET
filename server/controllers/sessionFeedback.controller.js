@@ -379,9 +379,8 @@ const markAttendance = async (req, res) => {
         await feedback.save();
 
         // Create/update attendance record
-        // Map frontend status to valid enum values
+        // statusLower is already declared above, so we can reuse it
         let attendanceStatusValue = 'present'; // default
-        const statusLower = (status || '').toLowerCase();
 
         if (statusLower === 'completed' || statusLower === 'present') {
             attendanceStatusValue = 'present';
