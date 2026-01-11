@@ -297,39 +297,44 @@ const approveBooking = async (req, res) => {
 
         await booking.save();
 
-        // Create or update CurrentTutor relationship
-        const tutorProfile = await TutorProfile.findOne({ userId: booking.tutorId });
-        let currentTutor = await CurrentTutor.findOne({
-            studentId: booking.studentId,
-            tutorId: booking.tutorId,
-            subject: booking.subject,
-            isActive: true
-        });
-
-        if (!currentTutor) {
-            // Create new relationship
-            currentTutor = await CurrentTutor.create({
+        // CRITICAL: Only create CurrentTutor relationship for REGULAR bookings, NOT trials
+        let currentTutor = null;
+        if (booking.bookingCategory === 'session') {
+            // Create or update CurrentTutor relationship for regular bookings only
+            const tutorProfile = await TutorProfile.findOne({ userId: booking.tutorId });
+            currentTutor = await CurrentTutor.findOne({
                 studentId: booking.studentId,
                 tutorId: booking.tutorId,
                 subject: booking.subject,
-                classGrade: tutorProfile?.classes?.[0] || '',
-                relationshipStartDate: new Date(),
-                status: 'new',
-                totalSessionsBooked: 1,
                 isActive: true
             });
-        } else {
-            // Update existing relationship
-            currentTutor.totalSessionsBooked += 1;
-            if (currentTutor.status === 'new' && currentTutor.totalSessionsBooked > 0) {
-                currentTutor.status = 'active';
-            }
-            await currentTutor.save();
-        }
 
-        // Link booking to current tutor
-        booking.currentTutorId = currentTutor._id;
-        await booking.save();
+            if (!currentTutor) {
+                // Create new relationship
+                currentTutor = await CurrentTutor.create({
+                    studentId: booking.studentId,
+                    tutorId: booking.tutorId,
+                    subject: booking.subject,
+                    classGrade: tutorProfile?.classes?.[0] || '',
+                    relationshipStartDate: new Date(),
+                    status: 'new',
+                    totalSessionsBooked: 1,
+                    isActive: true
+                });
+            } else {
+                // Update existing relationship
+                currentTutor.totalSessionsBooked += 1;
+                if (currentTutor.status === 'new' && currentTutor.totalSessionsBooked > 0) {
+                    currentTutor.status = 'active';
+                }
+                await currentTutor.save();
+            }
+
+            // Link booking to current tutor
+            booking.currentTutorId = currentTutor._id;
+            await booking.save();
+        }
+        // For trials: currentTutor remains null, no permanent relationship created
 
         const populatedBooking = await Booking.findById(booking._id)
             .populate('studentId', 'name email')
@@ -337,8 +342,8 @@ const approveBooking = async (req, res) => {
 
         res.json({ message: 'Booking approved', booking: populatedBooking });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error('Error in approveBooking:', error);
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
 
