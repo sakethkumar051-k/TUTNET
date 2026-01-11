@@ -16,12 +16,26 @@ const userSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
-        required: true,
+        required: function () {
+            return this.authProvider === 'local';
+        },
         trim: true
     },
     password: {
         type: String,
-        required: true
+        required: function () {
+            return this.authProvider === 'local';
+        }
+    },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+    authProvider: {
+        type: String,
+        enum: ['local', 'google'],
+        default: 'local'
     },
     role: {
         type: String,
@@ -47,6 +61,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    // Student specific fields
+    classGrade: {
+        type: String,
+        required: function () {
+            return this.role === 'student';
+        }
+    },
     // Demo tracking (for students)
     demosUsed: {
         type: Number,
@@ -67,8 +88,12 @@ const userSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Hash password before saving
+// Hash password before saving (only for local auth)
 userSchema.pre('save', async function (next) {
+    // Skip password hashing for OAuth users
+    if (this.authProvider !== 'local' || !this.password) {
+        return next();
+    }
     if (!this.isModified('password')) {
         return next();
     }

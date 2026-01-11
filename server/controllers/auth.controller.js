@@ -209,11 +209,74 @@ const resetPassword = async (req, res) => {
     }
 };
 
+// @desc    Update user profile (onboarding)
+// @route   PUT /api/auth/profile
+// @access  Private
+const updateProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const { role, phone, location, classGrade, subjects } = req.body;
+
+        // Update fields if provided
+        if (role) user.role = role;
+        if (phone) user.phone = phone;
+        if (classGrade) user.classGrade = classGrade; // For students
+
+        if (location) {
+            if (location.area) user.location.area = location.area;
+            if (location.city) user.location.city = location.city;
+        }
+
+        // If user becomes a tutor, create profile if not exists
+        if (user.role === 'tutor') {
+            const profileExists = await TutorProfile.findOne({ userId: user._id });
+
+            if (!profileExists) {
+                await TutorProfile.create({
+                    userId: user._id,
+                    hourlyRate: 0,
+                    approvalStatus: 'pending',
+                    subjects: subjects || [] // Initialize with provided subjects
+                });
+            } else if (subjects) {
+                // Update subjects if profile exists
+                profileExists.subjects = subjects;
+                await profileExists.save();
+            }
+        }
+
+        await user.save();
+
+        // Generate NEW token with updated role
+        const newToken = generateToken(user._id);
+
+        res.json({
+            _id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: newToken,
+            phone: user.phone,
+            location: user.location,
+            classGrade: user.classGrade
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
     getMe,
     verifyAdminSecret,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    updateProfile
 };

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const Register = () => {
     const [role, setRole] = useState('student');
@@ -80,8 +81,8 @@ const Register = () => {
                                 type="button"
                                 onClick={() => setRole('student')}
                                 className={`relative z-10 px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${role === 'student'
-                                        ? 'text-white'
-                                        : 'text-gray-700 hover:text-gray-900'
+                                    ? 'text-white'
+                                    : 'text-gray-700 hover:text-gray-900'
                                     }`}
                             >
                                 I'm a Student
@@ -90,8 +91,8 @@ const Register = () => {
                                 type="button"
                                 onClick={() => setRole('tutor')}
                                 className={`relative z-10 px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${role === 'tutor'
-                                        ? 'text-white'
-                                        : 'text-gray-700 hover:text-gray-900'
+                                    ? 'text-white'
+                                    : 'text-gray-700 hover:text-gray-900'
                                     }`}
                             >
                                 I'm a Tutor
@@ -106,7 +107,16 @@ const Register = () => {
 
                 {/* Registration Form */}
                 <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                    <form onSubmit={handleSubmit} className="p-8 space-y-5">
+                    <div className="p-8 pb-0 pt-8 space-y-4">
+                        <GoogleSignInButton text="Sign up with Google" />
+
+                        <div className="relative flex items-center justify-center">
+                            <div className="border-t border-gray-200 w-full"></div>
+                            <span className="bg-white px-3 text-sm text-gray-500 font-medium">Or continue with</span>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="p-8 pt-4 space-y-5">
                         {error && (
                             <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
                                 <div className="flex items-center">

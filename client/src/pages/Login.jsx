@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const Login = () => {
     const [searchParams] = useSearchParams();
-    const [role, setRole] = useState('student');
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -16,9 +16,21 @@ const Login = () => {
 
     useEffect(() => {
         const redirect = searchParams.get('redirect');
+        const errorParam = searchParams.get('error');
+
         if (redirect) {
             // Store redirect for after login
             sessionStorage.setItem('redirectAfterLogin', redirect);
+        }
+
+        if (errorParam) {
+            // Mapping common error codes to user-friendly messages
+            const errorMap = {
+                'oauth_failed': 'Google Sign-In failed. Please try again.',
+                'token_generation_failed': 'Could not verify your Google account.',
+                'access_denied': 'Access denied. Please log in first.',
+            };
+            setError(errorMap[errorParam] || 'An error occurred. Please try again.');
         }
     }, [searchParams]);
 
@@ -34,22 +46,19 @@ const Login = () => {
         try {
             const userData = await login(formData);
 
-            // Verify role matches
-            if (userData.role !== role) {
-                setError(`This account is registered as ${userData.role}, not ${role}`);
-                setLoading(false);
-                return;
-            }
-
             // Check for redirect
             const redirect = sessionStorage.getItem('redirectAfterLogin');
             if (redirect) {
                 sessionStorage.removeItem('redirectAfterLogin');
                 navigate(redirect);
             } else {
-                // Navigate based on role
-                if (role === 'tutor') {
+                // Navigate based on role from backend
+                const userRole = userData.role || 'student';
+
+                if (userRole === 'tutor') {
                     navigate('/tutor-dashboard');
+                } else if (userRole === 'admin') {
+                    navigate('/admin-dashboard');
                 } else {
                     navigate('/student-dashboard');
                 }
@@ -75,41 +84,17 @@ const Login = () => {
                 </div>
 
                 {/* Role Switcher */}
-                <div className="mb-8">
-                    <div className="relative bg-white rounded-2xl p-1 shadow-sm border border-gray-200">
-                        <div className="grid grid-cols-2 gap-1">
-                            <button
-                                type="button"
-                                onClick={() => setRole('student')}
-                                className={`relative z-10 px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${role === 'student'
-                                        ? 'text-white'
-                                        : 'text-gray-700 hover:text-gray-900'
-                                    }`}
-                            >
-                                I'm a Student
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setRole('tutor')}
-                                className={`relative z-10 px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${role === 'tutor'
-                                        ? 'text-white'
-                                        : 'text-gray-700 hover:text-gray-900'
-                                    }`}
-                            >
-                                I'm a Tutor
-                            </button>
-                        </div>
-                        {/* Sliding background */}
-                        <div
-                            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-xl shadow-lg transition-all duration-300 ease-out ${role === 'tutor' ? 'translate-x-[calc(100%+8px)]' : 'translate-x-0'
-                                }`}
-                        />
-                    </div>
-                </div>
-
-                {/* Login Form */}
                 <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                    <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                    <div className="p-8 pb-0 pt-8 space-y-4">
+                        <GoogleSignInButton text="Sign in with Google" />
+
+                        <div className="relative flex items-center justify-center">
+                            <div className="border-t border-gray-200 w-full"></div>
+                            <span className="bg-white px-3 text-sm text-gray-500 font-medium">Original</span>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="p-8 pt-4 space-y-6">
                         {error && (
                             <div className="bg-red-50 border border-red-200 rounded-2xl p-4 animate-shake">
                                 <div className="flex items-center">
@@ -169,7 +154,7 @@ const Login = () => {
                                     Signing in...
                                 </>
                             ) : (
-                                `Sign in as ${role.charAt(0).toUpperCase() + role.slice(1)}`
+                                `Sign in`
                             )}
                         </button>
                     </form>

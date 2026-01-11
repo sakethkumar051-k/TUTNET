@@ -13,6 +13,10 @@ import AdminLogin from './pages/AdminLogin';
 import FindTutors from './pages/FindTutors';
 import Footer from './components/Footer';
 import TutorProfilePage from './pages/TutorProfilePage';
+import OAuthSuccess from './pages/OAuthSuccess';
+import CompleteProfile from './pages/CompleteProfile';
+import About from './pages/About';
+import Contact from './pages/Contact';
 
 function App() {
     return (
@@ -22,50 +26,32 @@ function App() {
                     <div className="flex flex-col min-h-screen">
                         <Navbar />
                         <Routes>
+                            {/* Public Routes */}
                             <Route path="/" element={<Home />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/register" element={<Register />} />
+                            <Route path="/oauth-success" element={<OAuthSuccess />} />
+                            <Route path="/complete-profile" element={<CompleteProfile />} />
                             <Route path="/admin-login" element={<AdminLogin />} />
-                            <Route
-                                path="/find-tutors"
-                                element={
-                                    <ProtectedRoute requiredRole="student">
-                                        <FindTutors />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/tutor/:id"
-                                element={
-                                    <ProtectedRoute requiredRole="student">
-                                        <TutorProfilePage />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/tutor-dashboard"
-                                element={
-                                    <ProtectedRoute requiredRole="tutor">
-                                        <TutorDashboard />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/student-dashboard"
-                                element={
-                                    <ProtectedRoute requiredRole="student">
-                                        <StudentDashboard />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/admin-dashboard"
-                                element={
-                                    <ProtectedRoute requiredRole="admin">
-                                        <AdminDashboard />
-                                    </ProtectedRoute>
-                                }
-                            />
+                            <Route path="/about" element={<About />} />
+                            <Route path="/contact" element={<Contact />} />
+
+                            {/* Protected Routes - Student */}
+                            <Route element={<ProtectedRoute allowedRoles={['student']} />}>
+                                <Route path="/student-dashboard" element={<StudentDashboard />} />
+                                <Route path="/find-tutors" element={<FindTutors />} />
+                                <Route path="/tutor/:id" element={<TutorProfilePage />} />
+                            </Route>
+
+                            {/* Protected Routes - Tutor */}
+                            <Route element={<ProtectedRoute allowedRoles={['tutor']} />}>
+                                <Route path="/tutor-dashboard" element={<TutorDashboard />} />
+                            </Route>
+
+                            {/* Protected Routes - Admin */}
+                            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                                <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                            </Route>
                         </Routes>
                         <Footer />
                     </div>

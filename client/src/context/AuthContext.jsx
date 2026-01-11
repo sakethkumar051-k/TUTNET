@@ -27,11 +27,27 @@ export const AuthProvider = ({ children }) => {
         checkLoggedIn();
     }, []);
 
-    const login = async (credentials) => {
-        const { data } = await api.post('/auth/login', credentials);
-        localStorage.setItem('token', data.token);
-        setUser(data);
-        return data;
+    const login = async (credentialsOrToken) => {
+        // If argument is a string, it's a token (from OAuth or Onboarding)
+        if (typeof credentialsOrToken === 'string') {
+            const token = credentialsOrToken;
+            localStorage.setItem('token', token);
+            // Immediately fetch user data with this new token
+            try {
+                const { data } = await api.get('/auth/me');
+                setUser(data);
+                return data;
+            } catch (error) {
+                console.error('Login with token failed:', error);
+                throw error;
+            }
+        } else {
+            // Standard credentials login
+            const { data } = await api.post('/auth/login', credentialsOrToken);
+            localStorage.setItem('token', data.token);
+            setUser(data);
+            return data;
+        }
     };
 
     const register = async (userData) => {

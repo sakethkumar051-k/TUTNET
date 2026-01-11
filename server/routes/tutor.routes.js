@@ -12,6 +12,7 @@ const { authorize } = require('../middleware/role.middleware');
 
 router.get('/', getTutors);
 router.get('/me', protect, authorize('tutor'), getMyProfile);
+router.get('/my-profile', protect, authorize('tutor'), getMyProfile); // Alias for frontend compatibility
 router.get('/:id', getTutorById);
 router.put('/profile', protect, authorize('tutor'), updateTutorProfile);
 router.patch('/profile/submit', protect, authorize('tutor'), submitForApproval);
