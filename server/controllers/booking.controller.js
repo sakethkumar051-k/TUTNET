@@ -280,7 +280,7 @@ const approveBooking = async (req, res) => {
         }
 
         booking.status = 'approved';
-        booking.attendanceStatus = 'scheduled';
+        // Keep attendanceStatus as 'pending' - will be updated when session starts
 
         // Parse session date if not set
         if (!booking.sessionDate) {
@@ -298,8 +298,11 @@ const approveBooking = async (req, res) => {
         await booking.save();
 
         // CRITICAL: Only create CurrentTutor relationship for REGULAR bookings, NOT trials
+        // Handle legacy bookings without bookingCategory
+        const isTrialBooking = booking.bookingCategory === 'trial' || booking.bookingType === 'demo';
+
         let currentTutor = null;
-        if (booking.bookingCategory === 'session') {
+        if (!isTrialBooking) {
             // Create or update CurrentTutor relationship for regular bookings only
             const tutorProfile = await TutorProfile.findOne({ userId: booking.tutorId });
             currentTutor = await CurrentTutor.findOne({
