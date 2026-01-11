@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [showUserMenu, setShowUserMenu] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -84,10 +87,13 @@ const Navbar = () => {
                         </div>
                     </div>
 
-                    {/* Right: User Actions */}
+                    {/* Right: Notifications + User Actions */}
                     <div className="flex items-center space-x-3">
                         {user ? (
                             <>
+                                {/* Notification Bell */}
+                                <NotificationBell />
+
                                 <span className="hidden md:block text-sm text-gray-600 px-3">
                                     <span className="font-medium">{user.name}</span>
                                 </span>

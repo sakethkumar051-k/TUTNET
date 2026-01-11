@@ -54,6 +54,7 @@ try {
     app.use('/api/attendance', require('./routes/attendance.routes'));
     app.use('/api/current-tutors', require('./routes/currentTutor.routes'));
     app.use('/api/session-feedback', require('./routes/sessionFeedback.routes'));
+    app.use('/api/notifications', require('./routes/notification.routes'));
     console.log('All routes loaded successfully');
 } catch (error) {
     console.error('Error loading routes:', error);

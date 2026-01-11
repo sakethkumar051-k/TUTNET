@@ -2,6 +2,7 @@ const Booking = require('../models/Booking');
 const TutorProfile = require('../models/TutorProfile');
 const User = require('../models/User');
 const CurrentTutor = require('../models/CurrentTutor');
+const { createNotification } = require('../utils/notificationHelper');
 
 // @desc    Create a new booking
 // @route   POST /api/bookings
@@ -343,6 +344,22 @@ const approveBooking = async (req, res) => {
             .populate('studentId', 'name email')
             .populate('tutorId', 'name email');
 
+        // Send notification to student
+        const notificationType = booking.bookingCategory === 'trial' ? 'demo_accepted' : 'booking_approved';
+        const notificationTitle = booking.bookingCategory === 'trial' ? 'Demo Class Approved!' : 'Booking Approved!';
+        const notificationMessage = booking.bookingCategory === 'trial'
+            ? `Your demo class with ${populatedBooking.tutorId.name} for ${booking.subject} has been approved`
+            : `Your booking with ${populatedBooking.tutorId.name} for ${booking.subject} has been approved`;
+
+        await createNotification({
+            userId: booking.studentId,
+            type: notificationType,
+            title: notificationTitle,
+            message: notificationMessage,
+            link: '/student-dashboard?tab=sessions',
+            bookingId: booking._id
+        });
+
         res.json({ message: 'Booking approved', booking: populatedBooking });
     } catch (error) {
         console.error('Error in approveBooking:', error);
@@ -373,7 +390,22 @@ const rejectBooking = async (req, res) => {
         booking.status = 'rejected';
         await booking.save();
 
-        res.json({ message: 'Booking rejected', booking });
+        // Populate for notification
+        const populatedBooking = await Booking.findById(booking._id)
+            .populate('studentId', 'name email')
+            .populate('tutorId', 'name email');
+
+        // Send notification to student
+        await createNotification({
+            userId: booking.studentId,
+            type: 'booking_rejected',
+            title: 'Booking Update',
+            message: `Your booking request with ${populatedBooking.tutorId.name} was declined. Try another time slot?`,
+            link: '/find-tutors',
+            bookingId: booking._id
+        });
+
+        res.json({ message: 'Booking rejected', booking: populatedBooking });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });
