@@ -49,8 +49,8 @@ const userSchema = new mongoose.Schema({
         },
         area: {
             type: String,
-            required: true,
-            trim: true
+            // Optional in DB, enforced in CompleteProfile.jsx
+            default: ''
         },
         pincode: {
             type: String,
@@ -64,27 +64,28 @@ const userSchema = new mongoose.Schema({
     // Student specific fields
     classGrade: {
         type: String,
-        required: function () {
-            return this.role === 'student';
+        classGrade: {
+            type: String,
+            // Optional in DB, enforced in CompleteProfile.jsx
+            default: ''
+        },
+        // Demo tracking (for students)
+        demosUsed: {
+            type: Number,
+            default: 0
+        },
+        demoLimit: {
+            type: Number,
+            default: 3 // Admin configurable
+        },
+        lastDemoDate: {
+            type: Date
+        },
+        isActive: {
+            type: Boolean,
+            default: true
         }
-    },
-    // Demo tracking (for students)
-    demosUsed: {
-        type: Number,
-        default: 0
-    },
-    demoLimit: {
-        type: Number,
-        default: 3 // Admin configurable
-    },
-    lastDemoDate: {
-        type: Date
-    },
-    isActive: {
-        type: Boolean,
-        default: true
-    }
-}, {
+    }, {
     timestamps: true
 });
 
