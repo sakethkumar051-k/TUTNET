@@ -50,7 +50,8 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
         } else {
             setLoading(false);
         }
-    }, [session]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [session?._id]);
 
     const fetchFeedback = async () => {
         if (!session || !session._id) {
@@ -757,7 +758,7 @@ const SessionDetailsModal = ({ session, onClose, onUpdate }) => {
                                                             Due: {new Date(hw.dueDate).toLocaleDateString()}
                                                         </p>
                                                     )}
-                                                    {user?.role === 'student' && hw.status !== 'completed' && (
+                                                    {user?.role === 'student' && hw.status !== 'completed' && feedback?._id && (
                                                         <div className="flex gap-2 mt-2">
                                                             <button
                                                                 onClick={() => handleUpdateHomeworkStatus(feedback._id, index, 'in_progress')}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -12,12 +12,7 @@ const AttendanceTracker = () => {
     const { user } = useAuth();
     const { showSuccess, showError } = useToast();
 
-    useEffect(() => {
-        fetchAttendance();
-        fetchStats();
-    }, []);
-
-    const fetchAttendance = async () => {
+    const fetchAttendance = useCallback(async () => {
         try {
             const { data } = await api.get('/attendance');
             setAttendance(data);
@@ -26,16 +21,21 @@ const AttendanceTracker = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [showError]);
 
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
         try {
             const { data } = await api.get('/attendance/stats');
             setStats(data);
         } catch (err) {
             console.error('Failed to fetch stats:', err);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchAttendance();
+        fetchStats();
+    }, [fetchAttendance, fetchStats]);
 
     const markAttendance = async (formData) => {
         try {

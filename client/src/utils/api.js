@@ -28,23 +28,16 @@ const api = axios.create({
     },
 });
 
-// Log the actual request URL (both dev and prod for debugging)
+// Request interceptor - combines logging and token injection
 api.interceptors.request.use(
     (config) => {
+        // Log the actual request URL (both dev and prod for debugging)
         const fullURL = config.baseURL + config.url;
         console.log('API Request:', config.method?.toUpperCase(), fullURL);
-        console.log('Has token:', !!localStorage.getItem('token'));
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
-// Add a request interceptor
-api.interceptors.request.use(
-    (config) => {
+        
+        // Add authorization token if available
         const token = localStorage.getItem('token');
+        console.log('Has token:', !!token);
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
