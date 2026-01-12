@@ -1,5 +1,6 @@
 const TutorProfile = require('../models/TutorProfile');
 const User = require('../models/User');
+const { createNotification } = require('../utils/notificationHelper');
 
 // @desc    Get all approved tutors with filters
 // @route   GET /api/tutors
@@ -109,11 +110,11 @@ const checkProfileComplete = async (req, res) => {
     try {
         console.log('Checking profile completeness for user:', req.user.id);
         const user = await User.findById(req.user.id);
-        
+
         if (!user) {
             console.log('User not found:', req.user.id);
-            return res.status(200).json({ 
-                isComplete: false, 
+            return res.status(200).json({
+                isComplete: false,
                 missingFields: ['user'],
                 message: 'User not found',
                 profile: null
@@ -125,7 +126,7 @@ const checkProfileComplete = async (req, res) => {
         // If user is not a tutor, they don't need tutor profile completion
         if (user.role !== 'tutor') {
             console.log('User is not a tutor, returning complete=true');
-            return res.status(200).json({ 
+            return res.status(200).json({
                 isComplete: true, // Students don't need tutor profile
                 missingFields: [],
                 message: 'User is not a tutor',
@@ -138,8 +139,8 @@ const checkProfileComplete = async (req, res) => {
 
         // If profile doesn't exist yet, return incomplete status (not 404)
         if (!tutor) {
-            return res.status(200).json({ 
-                isComplete: false, 
+            return res.status(200).json({
+                isComplete: false,
                 missingFields: ['profile', 'subjects', 'classes', 'hourlyRate', 'experienceYears', 'bio', 'mode', 'languages'],
                 message: 'Tutor profile not found. Please complete your profile.',
                 profile: null
@@ -170,8 +171,8 @@ const checkProfileComplete = async (req, res) => {
     } catch (error) {
         console.error('Error in checkProfileComplete:', error);
         // Always return 200 with incomplete status on error, never 404 or 500
-        res.status(200).json({ 
-            isComplete: false, 
+        res.status(200).json({
+            isComplete: false,
             missingFields: [],
             message: 'Error checking profile completeness',
             profile: null
@@ -255,6 +256,14 @@ const updateTutorProfile = async (req, res) => {
         // Only reset approval status if profile was approved and critical fields changed
         if (requiresApproval && wasApproved) {
             tutor.approvalStatus = 'pending';
+
+            await createNotification({
+                userId: req.user.id,
+                type: 'system_alert',
+                title: 'Profile Under Review',
+                message: 'Your profile changes require admin approval. Your profile will be hidden until approved.',
+                link: '/tutor-dashboard'
+            });
         }
 
         await tutor.save();
@@ -283,6 +292,14 @@ const submitForApproval = async (req, res) => {
         tutor.approvalStatus = 'pending';
         tutor.rejectionReason = undefined; // Clear any previous rejection reason
         await tutor.save();
+
+        await createNotification({
+            userId: req.user.id,
+            type: 'system_alert',
+            title: 'Profile Submitted',
+            message: 'Your profile has been submitted for approval.',
+            link: '/tutor-dashboard'
+        });
 
         res.json(tutor);
     } catch (error) {

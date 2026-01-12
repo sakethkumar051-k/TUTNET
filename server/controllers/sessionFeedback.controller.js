@@ -2,6 +2,7 @@ const SessionFeedback = require('../models/SessionFeedback');
 const Booking = require('../models/Booking');
 const CurrentTutor = require('../models/CurrentTutor');
 const Attendance = require('../models/Attendance');
+const { createNotification } = require('../utils/notificationHelper');
 
 // @desc    Get session feedback
 // @route   GET /api/session-feedback/booking/:bookingId
@@ -99,6 +100,15 @@ const submitTutorFeedback = async (req, res) => {
         // Mark booking as having feedback
         booking.hasFeedback = true;
         await booking.save();
+
+        await createNotification({
+            userId: booking.studentId,
+            type: 'feedback_received',
+            title: 'Tutor Feedback Received',
+            message: 'Your tutor has provided feedback for a session.',
+            link: '/student-dashboard?tab=sessions',
+            bookingId: booking._id
+        });
 
         res.json(feedback);
     } catch (error) {
@@ -198,6 +208,16 @@ const addStudyMaterial = async (req, res) => {
         });
 
         await feedback.save();
+
+        await createNotification({
+            userId: booking.studentId,
+            type: 'study_material_added',
+            title: 'New Study Material',
+            message: `New study material added: ${title}`,
+            link: '/student-dashboard?tab=sessions',
+            bookingId: booking._id
+        });
+
         res.json(feedback);
     } catch (error) {
         console.error(error);
@@ -279,6 +299,16 @@ const addHomework = async (req, res) => {
         });
 
         await feedback.save();
+
+        await createNotification({
+            userId: booking.studentId,
+            type: 'homework_assigned',
+            title: 'New Homework Assigned',
+            message: `New homework assigned: ${description}`,
+            link: '/student-dashboard?tab=sessions',
+            bookingId: booking._id
+        });
+
         res.json(feedback);
     } catch (error) {
         console.error(error);
@@ -313,6 +343,17 @@ const updateHomeworkStatus = async (req, res) => {
                 feedback.homework[index].completedAt = new Date();
             }
             await feedback.save();
+        }
+
+        if (req.user.role === 'student' && status === 'completed') {
+            await createNotification({
+                userId: feedback.tutorId,
+                type: 'homework_completed',
+                title: 'Homework Completed',
+                message: 'Student has marked homework as completed.',
+                link: '/tutor-dashboard?tab=sessions',
+                bookingId: feedback.bookingId
+            });
         }
 
         res.json(feedback);
@@ -426,6 +467,15 @@ const markAttendance = async (req, res) => {
         }
 
         res.json(attendance);
+
+        await createNotification({
+            userId: booking.studentId,
+            type: 'attendance_marked',
+            title: 'Attendance Marked',
+            message: `Your attendance has been marked as ${status}.`,
+            link: '/student-dashboard?tab=sessions',
+            bookingId: booking._id
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });

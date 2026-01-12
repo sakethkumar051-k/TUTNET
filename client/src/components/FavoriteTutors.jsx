@@ -102,7 +102,7 @@ const FavoriteTutors = () => {
                                     </div>
                                 )}
                                 <Link
-                                    to={`/tutors/${tutor._id}`}
+                                    to={`/tutor/${profile._id}`}
                                     className="block w-full text-center px-4 py-2 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors text-sm font-medium"
                                 >
                                     View Profile

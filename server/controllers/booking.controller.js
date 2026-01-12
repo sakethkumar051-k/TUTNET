@@ -473,6 +473,20 @@ const completeBooking = async (req, res) => {
             }
         }
 
+        // Send notification to student
+        const populatedBooking = await Booking.findById(booking._id)
+            .populate('studentId', 'name email')
+            .populate('tutorId', 'name email');
+
+        await createNotification({
+            userId: booking.studentId,
+            type: 'session_completed',
+            title: 'Session Completed',
+            message: `Your session with ${populatedBooking.tutorId.name} for ${booking.subject} has been marked as completed.`,
+            link: '/student-dashboard?tab=sessions',
+            bookingId: booking._id
+        });
+
         res.json({ message: 'Booking marked as completed', booking });
     } catch (error) {
         console.error(error);

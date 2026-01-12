@@ -1,5 +1,6 @@
 const ProgressReport = require('../models/ProgressReport');
 const Booking = require('../models/Booking');
+const { createNotification } = require('../utils/notificationHelper');
 
 // @desc    Get all progress reports
 // @route   GET /api/progress-reports
@@ -70,6 +71,15 @@ const createProgressReport = async (req, res) => {
             .populate('studentId', 'name email')
             .populate('tutorId', 'name email')
             .populate('bookingId');
+
+        await createNotification({
+            userId: report.studentId,
+            type: 'progress_report_added',
+            title: 'New Progress Report',
+            message: `${populated.tutorId.name} added a progress report for ${report.month || 'recent sessions'}`,
+            link: '/student-dashboard?tab=progress',
+            metadata: { reportId: report._id }
+        });
 
         res.status(201).json(populated);
     } catch (error) {

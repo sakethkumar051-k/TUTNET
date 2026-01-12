@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
+import NotificationPanel from './NotificationPanel';
+import ProfileDropdown from './ProfileDropdown';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const [showUserMenu, setShowUserMenu] = useState(false);
+    // const [showUserMenu, setShowUserMenu] = useState(false); // No longer needed as ProfileDropdown handles this
 
     const handleLogout = () => {
         logout();
@@ -91,18 +93,14 @@ const Navbar = () => {
                     <div className="flex items-center space-x-3">
                         {user ? (
                             <>
-                                {/* Notification Bell */}
-                                <NotificationBell />
+                                {/* Notification Bell & Panel */}
+                                <div className="relative">
+                                    <NotificationBell />
+                                    <NotificationPanel />
+                                </div>
 
-                                <span className="hidden md:block text-sm text-gray-600 px-3">
-                                    <span className="font-medium">{user.name}</span>
-                                </span>
-                                <button
-                                    onClick={handleLogout}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 border border-gray-300 rounded-full transition-colors flex items-center justify-center"
-                                >
-                                    Logout
-                                </button>
+                                {/* Profile Circle (Dropdown) */}
+                                <ProfileDropdown />
                             </>
                         ) : (
                             <>

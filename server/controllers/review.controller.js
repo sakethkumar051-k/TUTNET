@@ -1,6 +1,7 @@
 const Review = require('../models/Review');
 const Booking = require('../models/Booking');
 const TutorProfile = require('../models/TutorProfile');
+const { createNotification } = require('../utils/notificationHelper');
 
 // @desc    Create a review
 // @route   POST /api/reviews
@@ -52,6 +53,15 @@ const createReview = async (req, res) => {
                 reviews.reduce((acc, item) => item.rating + acc, 0) / reviews.length;
             await tutorProfile.save();
         }
+
+        await createNotification({
+            userId: tutorId || booking.tutorId,
+            type: 'new_review',
+            title: 'New Review Received',
+            message: `You received a ${rating}-star review!`,
+            link: '/tutor-dashboard?tab=analytics',
+            metadata: { reviewId: review._id }
+        });
 
         res.status(201).json(review);
     } catch (error) {

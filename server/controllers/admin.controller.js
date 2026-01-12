@@ -4,6 +4,7 @@ const Booking = require('../models/Booking');
 const Review = require('../models/Review');
 const Attendance = require('../models/Attendance');
 const ProgressReport = require('../models/ProgressReport');
+const { createNotification } = require('../utils/notificationHelper');
 
 // @desc    Get all pending tutors
 // @route   GET /api/admin/tutors/pending
@@ -33,6 +34,14 @@ const approveTutor = async (req, res) => {
         tutor.approvalStatus = 'approved';
         await tutor.save();
 
+        await createNotification({
+            userId: tutor.userId,
+            type: 'system_alert',
+            title: 'Profile Approved!',
+            message: 'Your tutor profile has been approved. You can now start accepting bookings.',
+            link: '/tutor-dashboard'
+        });
+
         res.json({ message: 'Tutor approved', tutor });
     } catch (error) {
         console.error(error);
@@ -54,6 +63,14 @@ const rejectTutor = async (req, res) => {
         tutor.approvalStatus = 'rejected';
         tutor.rejectionReason = req.body.reason || 'No reason provided';
         await tutor.save();
+
+        await createNotification({
+            userId: tutor.userId,
+            type: 'system_alert',
+            title: 'Profile Rejected',
+            message: `Your tutor profile was rejected. Reason: ${tutor.rejectionReason}. Please update your profile.`,
+            link: '/complete-profile'
+        });
 
         res.json({ message: 'Tutor rejected', tutor });
     } catch (error) {
@@ -141,8 +158,8 @@ const getAnalytics = async (req, res) => {
 
         const totalAttendance = await Attendance.countDocuments();
         const presentAttendance = await Attendance.countDocuments({ status: 'present' });
-        const attendanceRate = totalAttendance > 0 
-            ? ((presentAttendance / totalAttendance) * 100).toFixed(1) 
+        const attendanceRate = totalAttendance > 0
+            ? ((presentAttendance / totalAttendance) * 100).toFixed(1)
             : 0;
 
         // Recent activity (last 30 days)
