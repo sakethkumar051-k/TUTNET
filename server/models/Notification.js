@@ -21,6 +21,10 @@ const notificationSchema = new mongoose.Schema({
             'progress_report_added',
             'tutor_unavailable',
             'booking_cancelled',
+            'homework_assigned',
+            'feedback_received',
+            'attendance_marked',
+            'study_material_added',
 
             // Tutor notifications
             'new_booking_request',
@@ -28,6 +32,7 @@ const notificationSchema = new mongoose.Schema({
             'new_review',
             'payment_received',
             'student_cancellation',
+            'homework_completed',
 
             // Admin notifications
             'new_tutor_registration',
