@@ -114,46 +114,48 @@ const AttendanceTracker = () => {
             {/* Statistics Cards */}
             {stats && (
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 text-center hover:shadow-md transition-shadow">
-                        <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-                        <p className="text-xs text-gray-500 mt-2 font-medium">Total Sessions</p>
+                    <div className="bg-white rounded-lg border border-gray-200 p-6 text-center shadow-sm">
+                        <p className="text-4xl font-bold text-gray-900 mb-2">{stats.total}</p>
+                        <p className="text-sm text-gray-600 font-medium">Total Sessions</p>
                     </div>
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 text-center hover:shadow-md transition-shadow">
-                        <p className="text-3xl font-bold text-green-600">{stats.present}</p>
-                        <p className="text-xs text-gray-500 mt-2 font-medium">Present</p>
+                    <div className="bg-white rounded-lg border border-gray-200 p-6 text-center shadow-sm">
+                        <p className="text-4xl font-bold text-gray-900 mb-2">{stats.present}</p>
+                        <p className="text-sm text-gray-600 font-medium mb-1">Present</p>
                         {stats.total > 0 && (
-                            <p className="text-xs text-green-600 mt-1">
+                            <p className="text-sm font-semibold text-green-600">
                                 {((stats.present / stats.total) * 100).toFixed(1)}%
                             </p>
                         )}
                     </div>
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 text-center hover:shadow-md transition-shadow">
-                        <p className="text-3xl font-bold text-red-600">{stats.absent}</p>
-                        <p className="text-xs text-gray-500 mt-2 font-medium">Absent</p>
+                    <div className="bg-white rounded-lg border border-gray-200 p-6 text-center shadow-sm">
+                        <p className="text-4xl font-bold text-gray-900 mb-2">{stats.absent}</p>
+                        <p className="text-sm text-gray-600 font-medium mb-1">Absent</p>
                         {stats.total > 0 && (
-                            <p className="text-xs text-red-600 mt-1">
+                            <p className="text-sm font-semibold text-red-600">
                                 {((stats.absent / stats.total) * 100).toFixed(1)}%
                             </p>
                         )}
                     </div>
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 text-center hover:shadow-md transition-shadow">
-                        <p className="text-3xl font-bold text-yellow-600">{stats.late}</p>
-                        <p className="text-xs text-gray-500 mt-2 font-medium">Late</p>
+                    <div className="bg-white rounded-lg border border-gray-200 p-6 text-center shadow-sm">
+                        <p className="text-4xl font-bold text-gray-900 mb-2">{stats.late}</p>
+                        <p className="text-sm text-gray-600 font-medium mb-1">Late</p>
                         {stats.total > 0 && (
-                            <p className="text-xs text-yellow-600 mt-1">
+                            <p className="text-sm font-semibold text-yellow-600">
                                 {((stats.late / stats.total) * 100).toFixed(1)}%
                             </p>
                         )}
                     </div>
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 text-center hover:shadow-md transition-shadow bg-gradient-to-br from-indigo-50 to-purple-50">
-                        <p className="text-3xl font-bold text-indigo-600">{stats.attendancePercentage}%</p>
-                        <p className="text-xs text-gray-500 mt-2 font-medium">Attendance Rate</p>
+                    <div className="bg-white rounded-lg border border-gray-200 p-6 text-center shadow-sm">
+                        <p className="text-4xl font-bold text-indigo-600 mb-2">{stats.attendancePercentage}%</p>
+                        <p className="text-sm text-gray-600 font-medium mb-1">Attendance Rate</p>
                         {weeklyTrend.trend !== 0 && (
-                            <p className={`text-xs mt-1 flex items-center justify-center gap-1 ${
-                                weeklyTrend.trend > 0 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                                {weeklyTrend.trend > 0 ? '↑' : '↓'} {Math.abs(weeklyTrend.trend).toFixed(1)}%
-                            </p>
+                            <div className="flex items-center justify-center gap-1 mt-1">
+                                <span className={`text-sm font-semibold ${
+                                    weeklyTrend.trend > 0 ? 'text-green-600' : 'text-red-600'
+                                }`}>
+                                    {weeklyTrend.trend > 0 ? '↑' : '↓'} {Math.abs(weeklyTrend.trend).toFixed(1)}%
+                                </span>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -161,34 +163,34 @@ const AttendanceTracker = () => {
 
             {/* Weekly Trend */}
             {stats && attendance.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Trend</h3>
+                <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                    <h3 className="text-base font-bold text-gray-900 mb-5 pb-3 border-b border-gray-200">Weekly Trend</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="p-4 bg-blue-50 rounded-lg">
-                            <p className="text-sm text-gray-600 mb-1">This Week</p>
-                            <p className="text-2xl font-bold text-blue-600">{weeklyTrend.thisWeek}%</p>
-                            <p className="text-xs text-gray-500 mt-1">
+                        <div className="p-5 bg-indigo-50 rounded-lg border border-indigo-100">
+                            <p className="text-sm text-gray-600 mb-2 font-medium">This Week</p>
+                            <p className="text-3xl font-bold text-indigo-600 mb-1">{weeklyTrend.thisWeek}%</p>
+                            <p className="text-xs text-gray-600">
                                 {attendance.filter(a => {
                                     const date = new Date(a.sessionDate);
                                     return date >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
                                 }).filter(a => a.status === 'present').length} present
                             </p>
                         </div>
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                            <p className="text-sm text-gray-600 mb-1">Last Week</p>
-                            <p className="text-2xl font-bold text-gray-600">{weeklyTrend.lastWeek}%</p>
-                            <p className="text-xs text-gray-500 mt-1">Previous period</p>
+                        <div className="p-5 bg-gray-50 rounded-lg border border-gray-200">
+                            <p className="text-sm text-gray-600 mb-2 font-medium">Last Week</p>
+                            <p className="text-3xl font-bold text-gray-700 mb-1">{weeklyTrend.lastWeek}%</p>
+                            <p className="text-xs text-gray-600">Previous period</p>
                         </div>
-                        <div className={`p-4 rounded-lg ${
-                            weeklyTrend.trend > 0 ? 'bg-green-50' : weeklyTrend.trend < 0 ? 'bg-red-50' : 'bg-gray-50'
+                        <div className={`p-5 rounded-lg border ${
+                            weeklyTrend.trend > 0 ? 'bg-green-50 border-green-100' : weeklyTrend.trend < 0 ? 'bg-red-50 border-red-100' : 'bg-gray-50 border-gray-200'
                         }`}>
-                            <p className="text-sm text-gray-600 mb-1">Change</p>
-                            <p className={`text-2xl font-bold ${
-                                weeklyTrend.trend > 0 ? 'text-green-600' : weeklyTrend.trend < 0 ? 'text-red-600' : 'text-gray-600'
+                            <p className="text-sm text-gray-600 mb-2 font-medium">Change</p>
+                            <p className={`text-3xl font-bold mb-1 ${
+                                weeklyTrend.trend > 0 ? 'text-green-600' : weeklyTrend.trend < 0 ? 'text-red-600' : 'text-gray-700'
                             }`}>
                                 {weeklyTrend.trend > 0 ? '+' : ''}{weeklyTrend.trend.toFixed(1)}%
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-600">
                                 {weeklyTrend.trend > 0 ? 'Improving' : weeklyTrend.trend < 0 ? 'Declining' : 'Stable'}
                             </p>
                         </div>
@@ -198,9 +200,9 @@ const AttendanceTracker = () => {
 
             {/* Monthly Breakdown */}
             {Object.keys(monthlyData).length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Breakdown</h3>
-                    <div className="space-y-3">
+                <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                    <h3 className="text-base font-bold text-gray-900 mb-5 pb-3 border-b border-gray-200">Monthly Breakdown</h3>
+                    <div className="space-y-4">
                         {Object.entries(monthlyData)
                             .sort((a, b) => b[0].localeCompare(a[0]))
                             .slice(0, 6)
@@ -208,22 +210,22 @@ const AttendanceTracker = () => {
                                 const rate = data.total > 0 ? (data.present / data.total * 100).toFixed(1) : 0;
                                 const date = new Date(month + '-01');
                                 return (
-                                    <div key={month} className="border border-gray-200 rounded-lg p-4">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <p className="font-medium text-gray-900">
+                                    <div key={month} className="border border-gray-200 rounded-lg p-5 hover:border-gray-300 transition-colors">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <p className="font-semibold text-gray-900">
                                                 {date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                                             </p>
-                                            <p className="text-lg font-bold text-indigo-600">{rate}%</p>
+                                            <p className="text-xl font-bold text-indigo-600">{rate}%</p>
                                         </div>
-                                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                                            <span>Total: {data.total}</span>
-                                            <span className="text-green-600">Present: {data.present}</span>
-                                            <span className="text-red-600">Absent: {data.absent}</span>
-                                            {data.late > 0 && <span className="text-yellow-600">Late: {data.late}</span>}
+                                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                                            <span className="font-medium">Total: {data.total}</span>
+                                            <span className="text-green-600 font-medium">Present: {data.present}</span>
+                                            <span className="text-red-600 font-medium">Absent: {data.absent}</span>
+                                            {data.late > 0 && <span className="text-yellow-600 font-medium">Late: {data.late}</span>}
                                         </div>
-                                        <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                                        <div className="w-full bg-gray-200 rounded-full h-2.5">
                                             <div
-                                                className="bg-indigo-600 h-2 rounded-full transition-all"
+                                                className="bg-indigo-600 h-2.5 rounded-full transition-all"
                                                 style={{ width: `${rate}%` }}
                                             />
                                         </div>
@@ -235,10 +237,10 @@ const AttendanceTracker = () => {
             )}
 
             {/* Attendance List */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h3 className="text-lg font-semibold text-gray-900">Attendance Records</h3>
-                    <p className="text-sm text-gray-500 mt-1">Complete history of all attendance records</p>
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
+                    <h3 className="text-base font-bold text-gray-900">Attendance Records</h3>
+                    <p className="text-sm text-gray-600 mt-1">Complete history of all attendance records</p>
                 </div>
                 <div className="divide-y divide-gray-200">
                     {attendance.length === 0 ? (

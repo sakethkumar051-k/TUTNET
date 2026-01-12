@@ -11,7 +11,13 @@ const TutorProfileForm = () => {
         availableSlots: '',
         profilePicture: '',
         mode: 'home',
-        languages: ''
+        languages: '',
+        education: {
+            degree: '',
+            institution: '',
+            year: ''
+        },
+        qualifications: ''
     });
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -25,7 +31,7 @@ const TutorProfileForm = () => {
                 // Fetch both tutor profile and user details (for profile pic)
                 const [profileRes, userRes] = await Promise.all([
                     api.get('/tutors/me'),
-                    api.get('/users/me')
+                    api.get('/auth/me')
                 ]);
 
                 const data = profileRes.data;
@@ -41,7 +47,9 @@ const TutorProfileForm = () => {
                     availableSlots: data.availableSlots?.join(', ') || '',
                     profilePicture: userData.profilePicture || '',
                     mode: data.mode || 'home',
-                    languages: data.languages?.join(', ') || ''
+                    languages: data.languages?.join(', ') || '',
+                    education: data.education || { degree: '', institution: '', year: '' },
+                    qualifications: data.qualifications?.join(', ') || ''
                 });
             } catch (err) {
                 console.error(err);
@@ -54,7 +62,15 @@ const TutorProfileForm = () => {
     }, []);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (e.target.name.startsWith('education.')) {
+            const field = e.target.name.split('.')[1];
+            setFormData({
+                ...formData,
+                education: { ...formData.education, [field]: e.target.value }
+            });
+        } else {
+            setFormData({ ...formData, [e.target.name]: e.target.value });
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -69,21 +85,32 @@ const TutorProfileForm = () => {
                 classes: formData.classes.split(',').map(s => s.trim()).filter(s => s),
                 availableSlots: formData.availableSlots.split(',').map(s => s.trim()).filter(s => s),
                 languages: formData.languages.split(',').map(s => s.trim()).filter(s => s),
+                qualifications: formData.qualifications.split(',').map(s => s.trim()).filter(s => s),
                 hourlyRate: Number(formData.hourlyRate),
-                experienceYears: Number(formData.experienceYears)
+                experienceYears: Number(formData.experienceYears),
+                education: formData.education
             };
 
             const { data } = await api.put('/tutors/profile', payload);
-            setProfileData(data); // Update local state with new data including status
+            setProfileData(data);
 
-            if (data.approvalStatus === 'pending') {
-                setMessage({ type: 'success', text: 'Critical changes saved! Your profile is pending admin approval again.' });
+            // Check if this was a change to an already-approved profile
+            const wasApproved = profileData?.approvalStatus === 'approved';
+            const isNowPending = data.approvalStatus === 'pending';
+
+            if (wasApproved && isNowPending) {
+                // Profile was approved, but critical changes require re-approval
+                setMessage({ type: 'success', text: 'Profile updated! Critical changes require admin approval. Your profile will be reviewed again.' });
+            } else if (data.approvalStatus === 'pending' && !wasApproved) {
+                // Initial setup - no approval needed, just saved
+                setMessage({ type: 'success', text: 'Profile saved successfully! Admin will review your profile for approval.' });
             } else {
-                setMessage({ type: 'success', text: 'Profile updated successfully' });
+                // Regular update, no approval needed
+                setMessage({ type: 'success', text: 'Profile updated successfully!' });
             }
         } catch (err) {
             console.error(err);
-            setMessage({ type: 'error', text: 'Failed to update profile' });
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to update profile' });
         } finally {
             setSaving(false);
         }
@@ -107,7 +134,7 @@ const TutorProfileForm = () => {
         }
     };
 
-    if (loading) return <div>Loading profile...</div>;
+    if (loading) return <div className="text-center py-8">Loading profile...</div>;
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -157,14 +184,14 @@ const TutorProfileForm = () => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+            <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-xl overflow-hidden">
                 {message.text && (
-                    <div className={`p-4 rounded-md ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                    <div className={`p-4 ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
                         {message.text}
                     </div>
                 )}
 
-                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 m-6 rounded">
                     <div className="flex">
                         <div className="flex-shrink-0">
                             <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -179,135 +206,211 @@ const TutorProfileForm = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6">
-                    {/* NEW: Profile Picture */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Profile Picture URL</label>
-                        <div className="mt-1 flex items-center gap-4">
-                            {formData.profilePicture ? (
-                                <img src={formData.profilePicture} alt="Preview" className="h-12 w-12 rounded-full object-cover border border-gray-200" />
-                            ) : (
-                                <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 border border-gray-200">
-                                    <span className="text-xs">No Img</span>
+                <div className="p-6 space-y-8">
+                    {/* Section 1: Basic Information */}
+                    <div className="border-b pb-6">
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
+                        
+                        <div className="space-y-4">
+                            {/* Profile Picture */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture URL</label>
+                                <div className="flex items-center gap-4">
+                                    {formData.profilePicture ? (
+                                        <img src={formData.profilePicture} alt="Preview" className="h-20 w-20 rounded-full object-cover border-2 border-gray-200" />
+                                    ) : (
+                                        <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 border-2 border-gray-200">
+                                            <span className="text-xs">No Image</span>
+                                        </div>
+                                    )}
+                                    <input
+                                        type="text"
+                                        name="profilePicture"
+                                        value={formData.profilePicture}
+                                        onChange={handleChange}
+                                        placeholder="https://example.com/my-photo.jpg"
+                                        className="flex-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
                                 </div>
-                            )}
+                                <p className="mt-1 text-xs text-gray-500">Enter a direct URL to your image</p>
+                            </div>
+
+                            {/* Bio */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Bio / Teaching Style</label>
+                                <textarea
+                                    name="bio"
+                                    rows={4}
+                                    value={formData.bio}
+                                    onChange={handleChange}
+                                    placeholder="Describe your teaching style, experience, and what makes you a great tutor..."
+                                    className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 2: Teaching Details */}
+                    <div className="border-b pb-6">
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Teaching Details</h2>
+                        
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Subjects (comma separated)</label>
+                                    <input
+                                        type="text"
+                                        name="subjects"
+                                        value={formData.subjects}
+                                        onChange={handleChange}
+                                        placeholder="Math, Physics, Chemistry"
+                                        className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Classes/Grades (comma separated)</label>
+                                    <input
+                                        type="text"
+                                        name="classes"
+                                        value={formData.classes}
+                                        onChange={handleChange}
+                                        placeholder="Class 10, Class 12, Undergraduate"
+                                        className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Hourly Rate (₹)</label>
+                                    <input
+                                        type="number"
+                                        name="hourlyRate"
+                                        min="0"
+                                        value={formData.hourlyRate}
+                                        onChange={handleChange}
+                                        className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Experience (Years)</label>
+                                    <input
+                                        type="number"
+                                        name="experienceYears"
+                                        min="0"
+                                        value={formData.experienceYears}
+                                        onChange={handleChange}
+                                        className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Teaching Mode</label>
+                                    <select
+                                        name="mode"
+                                        value={formData.mode}
+                                        onChange={handleChange}
+                                        className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    >
+                                        <option value="home">Home Tuition</option>
+                                        <option value="online">Online</option>
+                                        <option value="both">Both</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Languages Spoken (comma separated)</label>
+                                <input
+                                    type="text"
+                                    name="languages"
+                                    value={formData.languages}
+                                    onChange={handleChange}
+                                    placeholder="English, Telugu, Hindi"
+                                    className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 3: Education & Qualifications */}
+                    <div className="border-b pb-6">
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Education & Qualifications</h2>
+                        
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Degree</label>
+                                    <input
+                                        type="text"
+                                        name="education.degree"
+                                        value={formData.education.degree}
+                                        onChange={handleChange}
+                                        placeholder="B.Tech, M.Sc, etc."
+                                        className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Institution</label>
+                                    <input
+                                        type="text"
+                                        name="education.institution"
+                                        value={formData.education.institution}
+                                        onChange={handleChange}
+                                        placeholder="University/College name"
+                                        className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                                    <input
+                                        type="text"
+                                        name="education.year"
+                                        value={formData.education.year}
+                                        onChange={handleChange}
+                                        placeholder="2020"
+                                        className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Qualifications / Certifications (comma separated)</label>
+                                <input
+                                    type="text"
+                                    name="qualifications"
+                                    value={formData.qualifications}
+                                    onChange={handleChange}
+                                    placeholder="B.Ed, TET, etc."
+                                    className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 4: Availability */}
+                    <div>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Availability</h2>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Available Time Slots (comma separated)</label>
                             <input
                                 type="text"
-                                name="profilePicture"
-                                value={formData.profilePicture}
+                                name="availableSlots"
+                                value={formData.availableSlots}
                                 onChange={handleChange}
-                                placeholder="https://example.com/my-photo.jpg"
-                                className="flex-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                placeholder="Mon-Fri 6PM-9PM, Weekends 10AM-2PM"
+                                className="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             />
+                            <p className="mt-1 text-xs text-gray-500">Separate different slots with commas</p>
                         </div>
-                        <p className="mt-1 text-xs text-gray-500">Enter a direct URL to your image for now.</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Subjects (comma separated)</label>
-                            <input
-                                type="text"
-                                name="subjects"
-                                value={formData.subjects}
-                                onChange={handleChange}
-                                placeholder="Math, Physics, Chemistry"
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Classes/Grades (comma separated)</label>
-                            <input
-                                type="text"
-                                name="classes"
-                                value={formData.classes}
-                                onChange={handleChange}
-                                placeholder="Class 10, Class 12, Undergraduate"
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Hourly Rate (₹)</label>
-                            <input
-                                type="number"
-                                name="hourlyRate"
-                                value={formData.hourlyRate}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Experience (Years)</label>
-                            <input
-                                type="number"
-                                name="experienceYears"
-                                value={formData.experienceYears}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            />
-                        </div>
-                        {/* NEW: Mode */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Teaching Mode</label>
-                            <select
-                                name="mode"
-                                value={formData.mode}
-                                onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            >
-                                <option value="home">Home Tuition</option>
-                                <option value="online">Online</option>
-                                <option value="both">Both</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* NEW: Languages */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Languages Spoken (comma separated)</label>
-                        <input
-                            type="text"
-                            name="languages"
-                            value={formData.languages}
-                            onChange={handleChange}
-                            placeholder="English, Telugu, Hindi"
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Bio / Teaching Style</label>
-                        <textarea
-                            name="bio"
-                            rows={4}
-                            value={formData.bio}
-                            onChange={handleChange}
-                            placeholder="Describe your teaching style, experience, and what makes you a great tutor..."
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Available Slots (Generic)</label>
-                        <input
-                            type="text"
-                            name="availableSlots"
-                            value={formData.availableSlots}
-                            onChange={handleChange}
-                            placeholder="e.g. Mon-Fri 6PM-9PM, Weekends 10AM-2PM"
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        />
                     </div>
                 </div>
 
-                <div className="flex justify-end pt-5">
+                <div className="px-6 py-4 bg-gray-50 border-t flex justify-end">
                     <button
                         type="submit"
                         disabled={saving}
-                        className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                        className="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                     >
                         {saving ? 'Saving...' : 'Save Profile'}
                     </button>

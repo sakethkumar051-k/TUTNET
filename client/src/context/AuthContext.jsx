@@ -62,8 +62,16 @@ export const AuthProvider = ({ children }) => {
         try {
             const { data } = await api.post('/auth/register', userData);
             localStorage.setItem('token', data.token);
-            setUser(data);
-            return data;
+            // Fetch full user data to get all fields including role
+            try {
+                const { data: fullUserData } = await api.get('/auth/me');
+                setUser(fullUserData);
+                return { ...data, ...fullUserData }; // Return combined data with role
+            } catch (fetchError) {
+                // If fetch fails, use the registration response
+                setUser(data);
+                return data;
+            }
         } catch (error) {
             console.error('Registration failed:', error);
             localStorage.removeItem('token');

@@ -54,18 +54,18 @@ const MyCurrentStudents = () => {
                         return (
                             <div
                                 key={relationship._id}
-                                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                                className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:border-gray-300 transition-colors"
                             >
                                 <div className="mb-4">
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">
                                         {studentInfo.name}
                                     </h3>
-                                    <p className="text-sm text-gray-600 mb-1">
-                                        📚 {relationship.subject}
+                                    <p className="text-sm text-gray-600 mb-1 font-medium">
+                                        {relationship.subject}
                                         {relationship.classGrade && ` • Class ${relationship.classGrade}`}
                                     </p>
                                     <p className="text-xs text-gray-500">
-                                        📍 {studentInfo.location?.area}, {studentInfo.location?.city}
+                                        {studentInfo.location?.area}, {studentInfo.location?.city}
                                     </p>
                                     <p className="text-xs text-gray-400 mt-1">
                                         Started: {new Date(relationship.relationshipStartDate).toLocaleDateString()}
@@ -73,22 +73,22 @@ const MyCurrentStudents = () => {
                                 </div>
 
                                 {/* Statistics */}
-                                <div className="grid grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                                <div className="grid grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
                                     <div>
-                                        <p className="text-xs text-gray-500 mb-1">Total Sessions</p>
-                                        <p className="text-lg font-bold text-gray-900">{relationship.totalSessionsBooked}</p>
+                                        <p className="text-xs text-gray-600 mb-1 font-medium">Total Sessions</p>
+                                        <p className="text-2xl font-bold text-gray-900">{relationship.totalSessionsBooked}</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-gray-500 mb-1">Completed</p>
-                                        <p className="text-lg font-bold text-green-600">{relationship.sessionsCompleted}</p>
+                                        <p className="text-xs text-gray-600 mb-1 font-medium">Completed</p>
+                                        <p className="text-2xl font-bold text-green-600">{relationship.sessionsCompleted}</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-gray-500 mb-1">Missed</p>
-                                        <p className="text-lg font-bold text-red-600">{relationship.sessionsMissed}</p>
+                                        <p className="text-xs text-gray-600 mb-1 font-medium">Missed</p>
+                                        <p className="text-2xl font-bold text-red-600">{relationship.sessionsMissed}</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-gray-500 mb-1">Attendance</p>
-                                        <p className="text-lg font-bold text-indigo-600">{attendancePercentage}%</p>
+                                        <p className="text-xs text-gray-600 mb-1 font-medium">Attendance</p>
+                                        <p className="text-2xl font-bold text-indigo-600">{attendancePercentage}%</p>
                                     </div>
                                 </div>
 
@@ -102,10 +102,10 @@ const MyCurrentStudents = () => {
                                                 navigate(`/tutor-dashboard?tab=progress&studentId=${relationship.studentId._id}`);
                                             }
                                         }}
-                                        className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                        className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                                         aria-label="View student progress"
                                     >
-                                        📊 View Progress
+                                        View Analytics
                                     </button>
                                     <button
                                         onClick={() => navigate(`/tutor-dashboard?tab=sessions&studentId=${relationship.studentId._id}&currentTutorId=${relationship._id}`)}
@@ -115,10 +115,10 @@ const MyCurrentStudents = () => {
                                                 navigate(`/tutor-dashboard?tab=sessions&studentId=${relationship.studentId._id}&currentTutorId=${relationship._id}`);
                                             }
                                         }}
-                                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                        className="flex-1 px-4 py-2 bg-white text-gray-700 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                                         aria-label="Manage sessions with student"
                                     >
-                                        📅 Manage Sessions
+                                        Manage Sessions
                                     </button>
                                 </div>
                             </div>

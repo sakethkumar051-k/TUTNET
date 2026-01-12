@@ -64,9 +64,9 @@ const TutorList = () => {
             <TutorSearch onSearch={handleSearch} />
 
             {/* Results Count */}
-            <div className="mb-4 flex items-center justify-between">
-                <p className="text-gray-700">
-                    <span className="font-semibold">{filteredTutors.length}</span> tutor{filteredTutors.length !== 1 ? 's' : ''} found
+            <div className="mb-6 pt-4 border-t border-gray-200">
+                <p className="text-gray-900 font-semibold text-base">
+                    <span className="font-bold">{filteredTutors.length}</span> tutor{filteredTutors.length !== 1 ? 's' : ''} found
                 </p>
             </div>
 

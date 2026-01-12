@@ -18,9 +18,14 @@ const ProgressReports = () => {
     const fetchReports = async () => {
         try {
             const { data } = await api.get('/progress-reports');
-            setReports(data);
+            setReports(data || []);
         } catch (err) {
-            showError('Failed to fetch progress reports');
+            console.error('Progress reports fetch error:', err);
+            // Don't show error if it's just empty data
+            if (err.response?.status !== 404) {
+                showError('Failed to fetch progress reports');
+            }
+            setReports([]);
         } finally {
             setLoading(false);
         }

@@ -144,132 +144,193 @@ const BookingList = ({ role }) => {
         </div>
     );
 
+    // Format date and time from preferredSchedule or sessionDate
+    const formatDateTime = (booking) => {
+        if (booking.sessionDate) {
+            const date = new Date(booking.sessionDate);
+            return {
+                date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
+                time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+            };
+        }
+        // Fallback to preferredSchedule parsing
+        return {
+            date: booking.preferredSchedule || 'Date not set',
+            time: ''
+        };
+    };
+
     return (
         <>
-            <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <ul className="divide-y divide-gray-200">
-                    {bookings.length === 0 ? (
-                        <li className="px-4 py-4 sm:px-6">
-                            <EmptyState
-                                icon="📅"
-                                title="No bookings found"
-                                description={role === 'student' 
-                                    ? "You haven't made any bookings yet. Start by finding a tutor!"
-                                    : "You don't have any booking requests yet."}
-                            />
-                        </li>
-                    ) : (
-                        bookings.map((booking) => (
-                            <li key={booking._id}>
-                                <div className="px-4 py-4 sm:px-6">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <p className="text-sm font-medium text-indigo-600 truncate">
+            <div className="p-6">
+                {bookings.length === 0 ? (
+                    <EmptyState
+                        title="No booking requests"
+                        description={role === 'student' 
+                            ? "You haven't made any bookings yet. Find a tutor and book your first session to get started."
+                            : "You don't have any booking requests yet. Once students request sessions, they'll appear here."}
+                        actionLabel={role === 'student' ? 'Find Tutors' : undefined}
+                        onAction={role === 'student' ? () => window.location.href = '/find-tutors' : undefined}
+                    />
+                ) : (
+                    <div className="space-y-4">
+                        {bookings.map((booking) => {
+                            const dateTime = formatDateTime(booking);
+                            const isPending = booking.status === 'pending';
+                            const isApproved = booking.status === 'approved';
+                            const isCompleted = booking.status === 'completed';
+
+                            return (
+                                <div
+                                    key={booking._id}
+                                    className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200"
+                                >
+                                    {/* Header with Subject and Status */}
+                                    <div className="flex items-start justify-between mb-4">
+                                        {/* Subject - Title */}
+                                        <h3 className="text-lg font-semibold text-gray-900">
                                             {booking.subject}
-                                        </p>
-                                        <div className="ml-2 flex-shrink-0">
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                ${booking.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                                    booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                        booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                                            booking.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
-                                                                booking.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                                                                    'bg-gray-100 text-gray-800'}`}>
-                                                {booking.status}
-                                            </span>
-                                        </div>
+                                        </h3>
+                                        {/* Status Badge - Top Right */}
+                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 ml-4
+                                            ${isApproved || isCompleted ? 'bg-green-100 text-green-800' :
+                                                isPending ? 'bg-amber-100 text-amber-800' :
+                                                    booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                        booking.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
+                                                            'bg-gray-100 text-gray-800'}`}>
+                                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                                        </span>
                                     </div>
-                                    <div className="mt-2 sm:flex sm:justify-between">
-                                        <div className="sm:flex flex-col gap-1">
-                                            <p className="flex items-center text-sm text-gray-700 font-medium">
-                                                {role === 'tutor' ? `Student: ${booking.studentId?.name}` : `Tutor: ${booking.tutorId?.name}`}
-                                            </p>
-                                            <p className="flex items-center text-sm text-gray-500">
-                                                📅 {booking.preferredSchedule}
-                                            </p>
-                                            <p className="flex items-center text-xs text-gray-400">
-                                                Created: {new Date(booking.createdAt).toLocaleDateString()}
-                                            </p>
-                                        </div>
-                                        <div className="mt-3 sm:mt-0 flex flex-wrap items-center gap-2">
-                                            {/* Student Actions */}
-                                            {role === 'student' && (
+
+                                    {/* Content Section */}
+                                    <div className="space-y-3 mb-4">
+                                        {/* Tutor/Student Name */}
+                                        <p className="text-sm text-gray-700">
+                                            {role === 'tutor' ? (
+                                                <>Student: <span className="font-medium text-gray-900">{booking.studentId?.name || 'Unknown'}</span></>
+                                            ) : (
+                                                <>Tutor: <span className="font-medium text-gray-900">{booking.tutorId?.name || 'Unknown'}</span></>
+                                            )}
+                                        </p>
+
+                                        {/* Date & Time - Grouped */}
+                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <span>{dateTime.date}</span>
+                                            {dateTime.time && (
                                                 <>
-                                                    {booking.status === 'pending' && (
-                                                        <button
-                                                            onClick={() => handleCancel(booking._id)}
-                                                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 border border-red-200"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    )}
-                                                    {(booking.status === 'completed' || booking.status === 'approved') && (
-                                                        <button
-                                                            onClick={() => openSessionDetails(booking)}
-                                                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                                                        >
-                                                            📝 View Session
-                                                        </button>
-                                                    )}
-                                                    {booking.status === 'completed' && !booking.hasReview && (
-                                                        <button
-                                                            onClick={() => openReviewModal(booking)}
-                                                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
-                                                        >
-                                                            ⭐ Leave Review
-                                                        </button>
-                                                    )}
-                                                    {booking.status === 'completed' && booking.hasReview && (
-                                                        <span className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-green-700 bg-green-50 border border-green-200">
-                                                            ✓ Reviewed
-                                                        </span>
-                                                    )}
+                                                    <span className="text-gray-400">•</span>
+                                                    <span>{dateTime.time}</span>
                                                 </>
                                             )}
+                                        </div>
 
-                                            {/* Tutor Actions */}
-                                            {role === 'tutor' && (
-                                                <>
-                                                    {booking.status === 'pending' && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => handleApprove(booking._id)}
-                                                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-                                                            >
-                                                                ✓ Accept
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleReject(booking._id)}
-                                                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 border border-gray-300"
-                                                            >
-                                                                ✕ Reject
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                    {booking.status === 'approved' && (
+                                        {/* Created Date - Subtle */}
+                                        <p className="text-xs text-gray-400">
+                                            Created {new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </p>
+                                    </div>
+
+                                    {/* Divider */}
+                                    <div className="border-t border-gray-200 my-4"></div>
+
+                                    {/* Actions Section */}
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {/* Student Actions */}
+                                        {role === 'student' && (
+                                            <>
+                                                {/* Approved/Completed: Primary CTA */}
+                                                {(isApproved || isCompleted) && (
+                                                    <button
+                                                        onClick={() => openSessionDetails(booking)}
+                                                        className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
+                                                    >
+                                                        View Session
+                                                    </button>
+                                                )}
+                                                {/* Pending: Cancel only (secondary) */}
+                                                {isPending && (
+                                                    <button
+                                                        onClick={() => handleCancel(booking._id)}
+                                                        className="px-4 py-2 bg-white text-red-700 text-sm font-medium rounded-md border border-red-300 hover:bg-red-50 transition-colors"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                )}
+                                                {/* Completed with no review: Leave Review */}
+                                                {isCompleted && !booking.hasReview && (
+                                                    <button
+                                                        onClick={() => openReviewModal(booking)}
+                                                        className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
+                                                    >
+                                                        Leave Review
+                                                    </button>
+                                                )}
+                                                {/* Completed with review: Reviewed badge */}
+                                                {isCompleted && booking.hasReview && (
+                                                    <span className="px-4 py-2 bg-green-50 text-green-700 text-sm font-medium rounded-md border border-green-200">
+                                                        ✓ Reviewed
+                                                    </span>
+                                                )}
+                                            </>
+                                        )}
+
+                                        {/* Tutor Actions */}
+                                        {role === 'tutor' && (
+                                            <>
+                                                {/* Pending: Accept (primary) + Reject (secondary) */}
+                                                {isPending && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleApprove(booking._id)}
+                                                            className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-md hover:bg-green-700 transition-colors shadow-sm hover:shadow-md"
+                                                        >
+                                                            Accept
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleReject(booking._id)}
+                                                            className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
+                                                        >
+                                                            Reject
+                                                        </button>
+                                                    </>
+                                                )}
+                                                {/* Approved: View Session (primary) + Mark Complete (secondary) */}
+                                                {isApproved && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => openSessionDetails(booking)}
+                                                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
+                                                        >
+                                                            View Session
+                                                        </button>
                                                         <button
                                                             onClick={() => handleComplete(booking._id)}
-                                                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                                                            className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
                                                         >
-                                                            ✓ Mark Complete
+                                                            Mark Complete
                                                         </button>
-                                                    )}
-                                                    {(booking.status === 'completed' || booking.status === 'approved') && (
-                                                        <button
-                                                            onClick={() => openSessionDetails(booking)}
-                                                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                                                        >
-                                                            📝 {booking.status === 'completed' ? 'Edit Session' : 'View Session'}
-                                                        </button>
-                                                    )}
-                                                </>
-                                            )}
-                                        </div>
+                                                    </>
+                                                )}
+                                                {/* Completed: View/Edit Session (primary) */}
+                                                {isCompleted && (
+                                                    <button
+                                                        onClick={() => openSessionDetails(booking)}
+                                                        className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
+                                                    >
+                                                        Edit Session
+                                                    </button>
+                                                )}
+                                            </>
+                                        )}
                                     </div>
                                 </div>
-                            </li>
-                        ))
-                    )}
-                </ul>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             {/* Review Modal */}

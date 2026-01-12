@@ -220,7 +220,7 @@ const updateProfile = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const { role, phone, location, classGrade, subjects } = req.body;
+        const { role, phone, location, classGrade, subjects, classes, hourlyRate, experienceYears, bio, mode, languages, availableSlots, education, qualifications } = req.body;
 
         // Update fields if provided
         if (role) user.role = role;
@@ -230,23 +230,46 @@ const updateProfile = async (req, res) => {
         if (location) {
             if (location.area) user.location.area = location.area;
             if (location.city) user.location.city = location.city;
+            if (location.pincode) user.location.pincode = location.pincode;
         }
 
-        // If user becomes a tutor, create profile if not exists
+        // If user becomes a tutor, create/update profile with all details
         if (user.role === 'tutor') {
+            console.log('Creating/updating tutor profile for user:', user._id);
             const profileExists = await TutorProfile.findOne({ userId: user._id });
 
             if (!profileExists) {
-                await TutorProfile.create({
+                // Create new tutor profile with all provided details
+                // Initial profile creation does NOT require admin approval - just save it
+                const newProfile = await TutorProfile.create({
                     userId: user._id,
-                    hourlyRate: 0,
-                    approvalStatus: 'pending',
-                    subjects: subjects || [] // Initialize with provided subjects
+                    subjects: subjects || [],
+                    classes: classes || [],
+                    hourlyRate: hourlyRate || 0,
+                    experienceYears: experienceYears || 0,
+                    bio: bio || '',
+                    mode: mode || 'home',
+                    languages: languages || [],
+                    availableSlots: availableSlots || [],
+                    education: education || {},
+                    qualifications: qualifications || [],
+                    approvalStatus: 'pending' // This is just a status, not blocking - admin will review later
                 });
-            } else if (subjects) {
-                // Update subjects if profile exists
-                profileExists.subjects = subjects;
+                console.log('Tutor profile created successfully:', newProfile._id);
+            } else {
+                // Update existing profile with all provided details
+                if (subjects) profileExists.subjects = subjects;
+                if (classes) profileExists.classes = classes;
+                if (hourlyRate !== undefined) profileExists.hourlyRate = hourlyRate;
+                if (experienceYears !== undefined) profileExists.experienceYears = experienceYears;
+                if (bio) profileExists.bio = bio;
+                if (mode) profileExists.mode = mode;
+                if (languages) profileExists.languages = languages;
+                if (availableSlots) profileExists.availableSlots = availableSlots;
+                if (education) profileExists.education = education;
+                if (qualifications) profileExists.qualifications = qualifications;
                 await profileExists.save();
+                console.log('Tutor profile updated successfully:', profileExists._id);
             }
         }
 

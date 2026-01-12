@@ -35,6 +35,8 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        
+        // Prevent form reset - keep form data even if there's an error
 
         // Validation
         if (formData.password !== formData.confirmPassword) {
@@ -51,12 +53,25 @@ const Register = () => {
 
         try {
             const { confirmPassword, ...registrationData } = formData;
-            await register({ ...registrationData, role });
-            navigate('/');
+            const userData = await register({ ...registrationData, role });
+            
+            // Don't reset form on success - we're redirecting anyway
+            // If tutor, redirect to complete profile to collect all business details
+            if (role === 'tutor') {
+                navigate('/complete-profile', { replace: true });
+            } else {
+                // For students, check if they need to complete profile
+                if (!userData.phone || !userData.location?.area) {
+                    navigate('/complete-profile', { replace: true });
+                } else {
+                    navigate('/student-dashboard', { replace: true });
+                }
+            }
         } catch (err) {
+            // On error, keep form data and show error message
             setError(err.response?.data?.message || 'Registration failed');
-        } finally {
             setLoading(false);
+            // Don't reset form - user can fix and resubmit
         }
     };
 

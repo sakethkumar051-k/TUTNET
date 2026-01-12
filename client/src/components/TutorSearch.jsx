@@ -32,9 +32,9 @@ const TutorSearch = ({ onSearch }) => {
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                🔍 Search Tutors
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-5">
+                Search Tutors
             </h3>
 
             <form onSubmit={handleSearch}>
@@ -119,9 +119,9 @@ const TutorSearch = ({ onSearch }) => {
                 <div className="flex gap-3">
                     <button
                         type="submit"
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-sm hover:shadow-md"
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-sm hover:shadow-md"
                     >
-                        🔍 Search
+                        Search
                     </button>
                     <button
                         type="button"
@@ -132,7 +132,7 @@ const TutorSearch = ({ onSearch }) => {
                                 handleClear();
                             }
                         }}
-                        className="px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                        className="px-6 bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 rounded-md border border-gray-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                         aria-label="Clear all filters"
                     >
                         Clear

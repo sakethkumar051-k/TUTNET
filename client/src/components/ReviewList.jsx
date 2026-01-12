@@ -67,21 +67,21 @@ const ReviewList = ({ tutorId, studentId }) => {
 
     return (
         <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-base font-bold text-gray-900 mb-5 pb-3 border-b border-gray-200">
                 Reviews ({reviews.length})
             </h3>
 
             {reviews.map((review) => (
-                <div key={review._id} className="bg-white rounded-lg shadow p-6 border border-gray-200">
+                <div key={review._id} className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:border-gray-300 transition-colors">
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                             {/* Rating */}
-                            <div className="flex items-center gap-2 mb-2">
+                            <div className="flex items-center gap-3 mb-3">
                                 <div className="flex">
                                     {[1, 2, 3, 4, 5].map((star) => (
                                         <span
                                             key={star}
-                                            className={`text-lg ${star <= review.rating
+                                            className={`text-xl ${star <= review.rating
                                                     ? 'text-yellow-400'
                                                     : 'text-gray-300'
                                                 }`}
@@ -90,34 +90,34 @@ const ReviewList = ({ tutorId, studentId }) => {
                                         </span>
                                     ))}
                                 </div>
-                                <span className="text-sm font-medium text-gray-700">
+                                <span className="text-base font-semibold text-gray-900">
                                     {review.rating}.0
                                 </span>
                             </div>
 
                             {/* Student Name */}
-                            <p className="font-medium text-gray-900 mb-1">
+                            <p className="font-semibold text-gray-900 mb-2 text-base">
                                 {review.studentId?.name || 'Anonymous'}
                             </p>
 
                             {/* Comment */}
                             {review.comment && (
-                                <p className="text-gray-700 mt-2">
+                                <p className="text-gray-700 mt-2 text-sm leading-relaxed">
                                     "{review.comment}"
                                 </p>
                             )}
 
                             {/* Date */}
-                            <p className="text-sm text-gray-500 mt-3">
+                            <p className="text-sm text-gray-600 mt-4">
                                 {formatDate(review.createdAt)}
                             </p>
                         </div>
 
                         {/* Tutor Name (for student view) */}
                         {studentId && review.tutorId && (
-                            <div className="ml-4 text-right">
-                                <p className="text-sm text-gray-600">Tutor:</p>
-                                <p className="font-medium text-gray-900">
+                            <div className="ml-6 text-right">
+                                <p className="text-xs text-gray-600 mb-1 font-medium">Tutor:</p>
+                                <p className="font-semibold text-indigo-600 text-base">
                                     {review.tutorId.name}
                                 </p>
                             </div>

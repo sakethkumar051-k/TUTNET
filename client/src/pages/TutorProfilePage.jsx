@@ -197,7 +197,7 @@ const TutorProfilePage = () => {
                                         </div>
                                     </div>
 
-                                    <div>
+                                    <div className="mb-6">
                                         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Classes / Grades</h3>
                                         <div className="flex flex-wrap gap-2">
                                             {tutor.classes?.map((cls, idx) => (
@@ -207,6 +207,38 @@ const TutorProfilePage = () => {
                                             ))}
                                         </div>
                                     </div>
+
+                                    {/* Education */}
+                                    {tutor.education && (tutor.education.degree || tutor.education.institution) && (
+                                        <div className="mb-6">
+                                            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Education</h3>
+                                            <div className="bg-gray-50 rounded-lg p-4">
+                                                {tutor.education.degree && (
+                                                    <p className="text-gray-900 font-medium">{tutor.education.degree}</p>
+                                                )}
+                                                {tutor.education.institution && (
+                                                    <p className="text-gray-600 text-sm mt-1">{tutor.education.institution}</p>
+                                                )}
+                                                {tutor.education.year && (
+                                                    <p className="text-gray-500 text-xs mt-1">Year: {tutor.education.year}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Qualifications */}
+                                    {tutor.qualifications && tutor.qualifications.length > 0 && (
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Qualifications</h3>
+                                            <div className="flex flex-wrap gap-2">
+                                                {tutor.qualifications.map((qual, idx) => (
+                                                    <span key={idx} className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium">
+                                                        {qual}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Availability */}

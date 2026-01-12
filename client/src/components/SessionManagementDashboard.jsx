@@ -11,6 +11,7 @@ const SessionManagementDashboard = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const [relationship, setRelationship] = useState(null);
+    const [allRelationships, setAllRelationships] = useState([]);
     const [todaysSessions, setTodaysSessions] = useState([]);
     const [todaysNotes, setTodaysNotes] = useState([]);
     const [todaysFeedback, setTodaysFeedback] = useState([]);
@@ -32,6 +33,13 @@ const SessionManagementDashboard = () => {
         try {
             let relationshipData = null;
             
+            // First, fetch all relationships for the selector
+            const { data: allRelationshipsData } = user?.role === 'student' 
+                ? await api.get('/current-tutors/student/my-tutors')
+                : await api.get('/current-tutors/tutor/my-students');
+            
+            setAllRelationships(allRelationshipsData || []);
+            
             if (currentTutorId) {
                 // If we have currentTutorId, use it directly
                 try {
@@ -39,46 +47,33 @@ const SessionManagementDashboard = () => {
                     relationshipData = analytics.relationship;
                 } catch (err) {
                     // Fallback: try to get relationship directly
-                    const { data: tutors } = user?.role === 'student' 
-                        ? await api.get('/current-tutors/student/my-tutors')
-                        : await api.get('/current-tutors/tutor/my-students');
-                    relationshipData = tutors.find(t => t._id === currentTutorId);
+                    relationshipData = allRelationshipsData.find(t => t._id === currentTutorId);
                 }
             } else if (user?.role === 'student' && tutorId) {
-                const { data: tutors } = await api.get('/current-tutors/student/my-tutors');
-                const rel = tutors.find(t => t.tutorId._id === tutorId || t.tutorId?._id === tutorId);
+                const rel = allRelationshipsData.find(t => t.tutorId._id === tutorId || t.tutorId?._id === tutorId);
                 if (rel) {
                     relationshipData = rel;
                 }
             } else if (user?.role === 'tutor' && studentId) {
-                const { data: students } = await api.get('/current-tutors/tutor/my-students');
-                const rel = students.find(s => s.studentId._id === studentId || s.studentId?._id === studentId);
+                const rel = allRelationshipsData.find(s => s.studentId._id === studentId || s.studentId?._id === studentId);
                 if (rel) {
                     relationshipData = rel;
                 }
             } else {
                 // If no parameters provided, auto-select the first current tutor/student
-                try {
-                    const { data: relationships } = user?.role === 'student' 
-                        ? await api.get('/current-tutors/student/my-tutors')
-                        : await api.get('/current-tutors/tutor/my-students');
-                    
-                    if (relationships && relationships.length > 0) {
-                        relationshipData = relationships[0];
-                        // Update URL to include the relationship ID for consistency
-                        const newParams = new URLSearchParams(searchParams);
-                        newParams.set('tab', 'sessions');
-                        if (user?.role === 'student') {
-                            newParams.set('tutorId', relationshipData.tutorId._id);
-                            newParams.set('currentTutorId', relationshipData._id);
-                        } else {
-                            newParams.set('studentId', relationshipData.studentId._id);
-                            newParams.set('currentTutorId', relationshipData._id);
-                        }
-                        navigate(`?${newParams.toString()}`, { replace: true });
+                if (allRelationshipsData && allRelationshipsData.length > 0) {
+                    relationshipData = allRelationshipsData[0];
+                    // Update URL to include the relationship ID for consistency
+                    const newParams = new URLSearchParams(searchParams);
+                    newParams.set('tab', 'sessions');
+                    if (user?.role === 'student') {
+                        newParams.set('tutorId', relationshipData.tutorId._id);
+                        newParams.set('currentTutorId', relationshipData._id);
+                    } else {
+                        newParams.set('studentId', relationshipData.studentId._id);
+                        newParams.set('currentTutorId', relationshipData._id);
                     }
-                } catch (err) {
-                    console.error('Failed to fetch relationships:', err);
+                    navigate(`?${newParams.toString()}`, { replace: true });
                 }
             }
 
@@ -91,6 +86,21 @@ const SessionManagementDashboard = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleRelationshipChange = (selectedRelationship) => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set('tab', 'sessions');
+        
+        if (user?.role === 'student') {
+            newParams.set('tutorId', selectedRelationship.tutorId._id);
+            newParams.set('currentTutorId', selectedRelationship._id);
+        } else {
+            newParams.set('studentId', selectedRelationship.studentId._id);
+            newParams.set('currentTutorId', selectedRelationship._id);
+        }
+        
+        navigate(`?${newParams.toString()}`, { replace: true });
     };
 
     const fetchTodaysData = async () => {
@@ -166,8 +176,46 @@ const SessionManagementDashboard = () => {
 
     if (!relationship) {
         return (
-            <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-                <p className="text-gray-500">No relationship found. Please establish a relationship first.</p>
+            <div className="bg-white rounded-lg border border-gray-200 p-12">
+                <div className="max-w-md mx-auto text-center">
+                    <div className="mb-6">
+                        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No sessions yet</h3>
+                    <p className="text-sm text-gray-600 mb-8 leading-relaxed">
+                        You don't have any active students or scheduled sessions.
+                        <br />
+                        <span className="text-gray-500">Once a student books a demo or class, it will appear here.</span>
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        {user?.role === 'tutor' && (
+                            <>
+                                <button
+                                    onClick={() => navigate('/tutor-dashboard?tab=profile')}
+                                    className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors"
+                                >
+                                    Set Availability
+                                </button>
+                                <button
+                                    onClick={() => navigate('/tutor-dashboard?tab=profile')}
+                                    className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
+                                >
+                                    View Profile
+                                </button>
+                            </>
+                        )}
+                        {user?.role === 'student' && (
+                            <button
+                                onClick={() => navigate('/find-tutors')}
+                                className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors"
+                            >
+                                Find Tutors
+                            </button>
+                        )}
+                    </div>
+                </div>
             </div>
         );
     }
@@ -178,16 +226,51 @@ const SessionManagementDashboard = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    Session Management
-                </h2>
-                <p className="text-gray-600">
-                    {user?.role === 'student' 
-                        ? `With ${relationship.tutorId?.name || otherUser?.name} - ${relationship.subject}`
-                        : `With ${relationship.studentId?.name || otherUser?.name} - ${relationship.subject}`}
-                </p>
+            {/* Header with Selector */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900 mb-2">
+                            Session Management
+                        </h2>
+                        <p className="text-sm text-gray-600">
+                            {user?.role === 'student' 
+                                ? `With ${relationship.tutorId?.name || otherUser?.name} - ${relationship.subject}`
+                                : `With ${relationship.studentId?.name || otherUser?.name} - ${relationship.subject}`}
+                        </p>
+                    </div>
+                    
+                    {/* Tutor/Student Selector */}
+                    {allRelationships.length > 1 && (
+                        <div className="flex-shrink-0">
+                            <label className="block text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                                {user?.role === 'student' ? 'Select Tutor' : 'Select Student'}
+                            </label>
+                            <select
+                                value={relationship?._id || ''}
+                                onChange={(e) => {
+                                    const selected = allRelationships.find(r => r._id === e.target.value);
+                                    if (selected) {
+                                        handleRelationshipChange(selected);
+                                    }
+                                }}
+                                className="w-full sm:w-64 px-4 py-2.5 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            >
+                                {allRelationships.map((rel) => {
+                                    const name = user?.role === 'student' 
+                                        ? rel.tutorId?.name 
+                                        : rel.studentId?.name;
+                                    const subject = rel.subject;
+                                    return (
+                                        <option key={rel._id} value={rel._id}>
+                                            {name} - {subject}
+                                        </option>
+                                    );
+                                })}
+                            </select>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -199,12 +282,14 @@ const SessionManagementDashboard = () => {
                         tutorId={relationship.tutorId?._id || tutorId}
                         studentId={relationship.studentId?._id || studentId}
                         subject={relationship.subject}
+                        tutorName={user?.role === 'student' ? relationship.tutorId?.name : undefined}
+                        studentName={user?.role === 'tutor' ? relationship.studentId?.name : undefined}
                         onBookingCreated={handleBookingCreated}
                     />
 
                     {/* Today's Sessions */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Today's Sessions</h3>
+                    <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                        <h3 className="text-base font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">Today's Sessions</h3>
                         {todaysSessions.length === 0 ? (
                             <p className="text-gray-500 text-sm">No sessions scheduled for today</p>
                         ) : (
@@ -264,8 +349,8 @@ const SessionManagementDashboard = () => {
                 {/* Right Column: Today's Notes & Feedback */}
                 <div className="space-y-6">
                     {/* Today's Discussion Notes */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Today's Discussion Notes</h3>
+                    <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                        <h3 className="text-base font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">Today's Discussion Notes</h3>
                         {todaysNotes.length === 0 ? (
                             <p className="text-gray-500 text-sm">No notes for today's sessions yet</p>
                         ) : (
@@ -302,8 +387,8 @@ const SessionManagementDashboard = () => {
                     </div>
 
                     {/* Today's Feedback */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Today's Feedback</h3>
+                    <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                        <h3 className="text-base font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">Today's Feedback</h3>
                         {todaysFeedback.length === 0 ? (
                             <p className="text-gray-500 text-sm">No feedback for today's sessions yet</p>
                         ) : (

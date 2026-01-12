@@ -82,7 +82,7 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
     };
 
     return (
-        <div className="group bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full hover:border-indigo-100">
+        <div className="group bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 overflow-hidden flex flex-col h-full hover:border-indigo-300">
             {/* Header Section - Clean & White */}
             <div className="px-5 pt-6 pb-4 bg-white">
                 <div className="flex items-start gap-4">
@@ -104,7 +104,7 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
                     {/* Name & Title */}
                     <div className="flex-1 min-w-0 pt-1">
                         <div className="flex justify-between items-start">
-                            <h3 className="text-lg font-bold text-gray-900 truncate" title={tutor.userId?.name}>
+                            <h3 className="text-lg font-semibold text-gray-900 truncate" title={tutor.userId?.name}>
                                 {tutor.userId?.name}
                             </h3>
                             {user?.role === 'student' && !checkingFavorite && (
@@ -124,19 +124,19 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
                             )}
                         </div>
 
-                        <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1">
-                            <span className="font-medium text-indigo-600">{tutor.experienceYears}+ Years</span> Experience
+                        <p className="text-sm text-gray-600 mt-0.5">
+                            <span className="font-medium">{tutor.experienceYears}+ Years</span> Experience
                         </p>
 
                         <div className="flex items-center gap-3 mt-1.5">
-                            <div className="flex items-center text-xs font-medium text-gray-700 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
+                            <div className="flex items-center text-xs font-medium text-gray-600 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-200">
                                 {tutor.mode === 'online' ? 'Online' : tutor.mode === 'home' ? 'Home' : 'Online & Home'}
                             </div>
                             {reviewCount > 0 && (
                                 <div className="flex items-center gap-1">
                                     <span className="text-amber-500 text-xs">★</span>
-                                    <span className="text-xs font-bold text-gray-900">{averageRating.toFixed(1)}</span>
-                                    <span className="text-[10px] text-gray-400">({reviewCount})</span>
+                                    <span className="text-xs font-semibold text-gray-900">{averageRating.toFixed(1)}</span>
+                                    <span className="text-[10px] text-gray-500">({reviewCount})</span>
                                 </div>
                             )}
                         </div>
@@ -149,19 +149,19 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
                 {/* Subjects */}
                 <div className="flex flex-wrap gap-2">
                     {tutor.subjects?.slice(0, 3).map((subject, idx) => (
-                        <span key={idx} className="px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 text-[11px] font-medium border border-slate-100">
+                        <span key={idx} className="px-3 py-1 rounded-full bg-white text-gray-700 text-xs font-medium border border-gray-200">
                             {subject}
                         </span>
                     ))}
                     {tutor.subjects?.length > 3 && (
-                        <span className="px-2 py-1 text-[10px] text-gray-400">+{tutor.subjects.length - 3}</span>
+                        <span className="px-2 py-1 text-xs text-gray-500">+{tutor.subjects.length - 3}</span>
                     )}
                 </div>
 
                 {/* Location if Home Tuition */}
                 {(tutor.mode === 'home' || tutor.mode === 'both') && tutor.userId?.location?.area && (
-                    <div className="flex items-center text-xs text-gray-400">
-                        <svg className="w-3.5 h-3.5 mr-1.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center text-xs text-gray-600">
+                        <svg className="w-3.5 h-3.5 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
@@ -172,7 +172,7 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
 
 
             {/* Footer / Actions */}
-            <div className="p-4 border-t border-gray-50 mt-auto space-y-2">
+            <div className="px-5 pb-5 pt-4 border-t border-gray-200 mt-auto space-y-2">
                 {user?.role === 'student' ? (
                     <>
                         {/* Primary Action - Smart Button */}
@@ -181,10 +181,10 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
                                 Loading...
                             </button>
                         ) : !trialStatus || !trialStatus.hasTriedTutor ? (
-                            // No trial yet
+                            // No trial yet - PRIMARY CTA
                             <button
                                 onClick={() => onRequestDemo(tutor)}
-                                className="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold hover:from-indigo-700 hover:to-purple-700 transition shadow-sm hover:shadow-md"
+                                className="w-full py-3 px-4 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-all duration-200 shadow-sm hover:shadow-md"
                             >
                                 Try Free Demo Class
                             </button>
@@ -192,7 +192,7 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
                             // Trial pending
                             <button
                                 disabled
-                                className="w-full py-2.5 px-4 rounded-lg bg-yellow-100 text-yellow-800 text-sm font-semibold cursor-not-allowed"
+                                className="w-full py-3 px-4 rounded-md bg-yellow-50 text-yellow-800 text-sm font-semibold cursor-not-allowed border border-yellow-200"
                             >
                                 Free Demo Pending...
                             </button>
@@ -200,15 +200,15 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
                             // Trial scheduled
                             <button
                                 onClick={() => navigate('/student-dashboard?tab=sessions')}
-                                className="w-full py-2.5 px-4 rounded-lg bg-green-100 text-green-800 text-sm font-semibold hover:bg-green-200 transition"
+                                className="w-full py-3 px-4 rounded-md bg-green-50 text-green-800 text-sm font-semibold hover:bg-green-100 transition border border-green-200"
                             >
                                 Demo Scheduled - View Details
                             </button>
                         ) : trialStatus.status === 'completed' ? (
-                            // Trial done - encourage booking
+                            // Trial done - encourage booking (PRIMARY)
                             <button
                                 onClick={() => setShowRegularBooking(true)}
-                                className="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm font-semibold hover:from-green-700 hover:to-emerald-700 transition shadow-sm hover:shadow-md"
+                                className="w-full py-3 px-4 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-all duration-200 shadow-sm hover:shadow-md"
                             >
                                 Book Paid Session
                             </button>
@@ -216,7 +216,7 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
                             // Default
                             <button
                                 onClick={() => setShowRegularBooking(true)}
-                                className="w-full py-2.5 px-4 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition shadow-sm hover:shadow-md"
+                                className="w-full py-3 px-4 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-all duration-200 shadow-sm hover:shadow-md"
                             >
                                 Book Session
                             </button>
@@ -226,14 +226,14 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
                         <div className="grid grid-cols-2 gap-2">
                             <button
                                 onClick={() => navigate(`/tutor/${tutor._id}`)}
-                                className="py-2 px-3 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-medium hover:bg-indigo-100 transition"
+                                className="py-2 px-3 rounded-md bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 transition border border-gray-300"
                             >
                                 View Profile
                             </button>
                             {!loadingTrialStatus && (!trialStatus || !trialStatus.hasTriedTutor) && (
                                 <button
                                     onClick={() => setShowRegularBooking(true)}
-                                    className="py-2 px-3 rounded-lg border border-indigo-300 text-indigo-600 text-xs font-medium hover:bg-indigo-50 transition"
+                                    className="py-2 px-3 rounded-md bg-white text-gray-700 text-xs font-medium hover:bg-gray-50 transition border border-gray-300"
                                 >
                                     Book Paid Session
                                 </button>
@@ -244,7 +244,7 @@ const TutorCard = ({ tutor, onRequestDemo }) => {
                     // Non-student view
                     <button
                         onClick={() => navigate(`/tutor/${tutor._id}`)}
-                        className="w-full py-2.5 px-4 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-semibold hover:bg-indigo-100 transition-colors"
+                        className="w-full py-3 px-4 rounded-md bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-all duration-200 shadow-sm hover:shadow-md"
                     >
                         View Profile
                     </button>

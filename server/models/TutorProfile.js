@@ -40,6 +40,24 @@ const tutorProfileSchema = new mongoose.Schema({
         type: [String], // Simple array of strings for now e.g., "Mon 10-12", "Wed 14-16"
         default: []
     },
+    education: {
+        degree: {
+            type: String,
+            trim: true
+        },
+        institution: {
+            type: String,
+            trim: true
+        },
+        year: {
+            type: String,
+            trim: true
+        }
+    },
+    qualifications: [{
+        type: String,
+        trim: true
+    }],
     approvalStatus: {
         type: String,
         enum: ['pending', 'approved', 'rejected'],

@@ -138,11 +138,11 @@ const SessionsPage = () => {
     const currentList = getFilteredSessions();
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 pb-12">
-            {/* Header Area - Keep simple */}
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">Your Sessions</h1>
-                <p className="text-gray-500 mt-1">Manage current classes, check calendar, and review history.</p>
+        <div className="max-w-7xl mx-auto space-y-8 pb-12">
+            {/* Header Area */}
+            <div className="pb-6 border-b border-gray-200">
+                <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">Sessions</h1>
+                <p className="text-gray-600 text-base">Manage your classes, schedule, and teaching history</p>
             </div>
 
             {/* Next Session - Only show if valid */}
@@ -159,7 +159,7 @@ const SessionsPage = () => {
             <div className="flex items-center space-x-1 border-b border-gray-200 overflow-x-auto no-scrollbar">
                 {[
                     { id: 'calendar', label: 'Calendar', count: 0 },
-                    { id: 'today', label: 'Today List', count: stats.today },
+                    { id: 'today', label: 'Today', count: stats.today },
                     { id: 'upcoming', label: 'Upcoming', count: stats.upcoming },
                     { id: 'requests', label: 'Requests', count: stats.requests },
                     { id: 'completed', label: 'History', count: stats.completed },
@@ -168,18 +168,20 @@ const SessionsPage = () => {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`
-                            px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex items-center gap-2
+                            px-4 py-3 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-2
                             ${activeTab === tab.id
-                                ? 'border-indigo-600 text-indigo-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'}
+                                ? 'border-gray-900 text-gray-900'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'}
                         `}
                     >
                         {tab.label}
-                        {tab.count > 0 && (
-                            <span className={`px-2 py-0.5 rounded-full text-xs ${activeTab === tab.id ? 'bg-indigo-100' : 'bg-gray-100'}`}>
-                                {tab.count}
-                            </span>
-                        )}
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            activeTab === tab.id 
+                                ? 'bg-gray-900 text-white' 
+                                : 'bg-gray-100 text-gray-600'
+                        }`}>
+                            {tab.count}
+                        </span>
                     </button>
                 ))}
             </div>
@@ -193,16 +195,19 @@ const SessionsPage = () => {
                         <SessionManagementDashboard />
                     </div>
                 ) : activeTab === 'requests' ? (
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="animate-fade-in">
                         <BookingList role={user?.role} />
                     </div>
                 ) : (
                     <div className="space-y-4">
                         {currentList.length === 0 ? (
                             <EmptyState
-                                icon={activeTab === 'completed' ? '🎓' : '📅'}
-                                title={`No ${activeTab} sessions`}
-                                description={`You don't have any ${activeTab} sessions at the moment.`}
+                                title={activeTab === 'completed' ? 'No completed sessions' : activeTab === 'today' ? 'No sessions today' : 'No upcoming sessions'}
+                                description={activeTab === 'completed' 
+                                    ? 'Your completed sessions will appear here once you finish teaching classes.'
+                                    : activeTab === 'today'
+                                    ? 'You don\'t have any sessions scheduled for today.'
+                                    : 'You don\'t have any upcoming sessions scheduled.'}
                             />
                         ) : (
                             currentList.map(session => (

@@ -3,7 +3,7 @@ import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
-const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookingCreated }) => {
+const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookingCreated, tutorName, studentName }) => {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [selectedTime, setSelectedTime] = useState('');
     const [availableSlots, setAvailableSlots] = useState([]);
@@ -173,8 +173,22 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Book a Session</h3>
+        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+            <div className="mb-5 pb-4 border-b border-gray-200">
+                <h3 className="text-base font-bold text-gray-900 mb-2">Book a Session</h3>
+                {user?.role === 'student' && tutorName && (
+                    <p className="text-sm text-gray-600">
+                        With <span className="font-semibold text-gray-900">{tutorName}</span>
+                        {subject && <span> - {subject}</span>}
+                    </p>
+                )}
+                {user?.role === 'tutor' && studentName && (
+                    <p className="text-sm text-gray-600">
+                        With <span className="font-semibold text-gray-900">{studentName}</span>
+                        {subject && <span> - {subject}</span>}
+                    </p>
+                )}
+            </div>
 
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-4">
@@ -291,7 +305,7 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
                         }
                     }}
                     disabled={loading}
-                    className="w-full mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                    className="w-full mt-4 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 flex items-center justify-center"
                 >
                     {loading ? (
                         <>
@@ -302,10 +316,7 @@ const SessionCalendar = ({ currentTutorId, tutorId, studentId, subject, onBookin
                             Booking...
                         </>
                     ) : (
-                        <>
-                            <span>📅</span>
-                            <span>Book Session for {selectedDate.toLocaleDateString()} at {selectedTime}</span>
-                        </>
+                        <span>Book Session for {selectedDate.toLocaleDateString()} at {selectedTime}</span>
                     )}
                 </button>
             )}
