@@ -147,13 +147,14 @@ const checkProfileComplete = async (req, res) => {
             });
         }
 
-        // Required fields for business development
+        // Check if vital fields are present (less strict validation for redirects)
         const requiredFields = {
             subjects: tutor.subjects && tutor.subjects.length > 0,
             classes: tutor.classes && tutor.classes.length > 0,
-            hourlyRate: tutor.hourlyRate > 0,
-            experienceYears: tutor.experienceYears !== undefined && tutor.experienceYears >= 0,
-            bio: tutor.bio && tutor.bio.trim().length >= 50,
+            hourlyRate: tutor.hourlyRate !== undefined && tutor.hourlyRate !== null,
+            experienceYears: tutor.experienceYears !== undefined && tutor.experienceYears !== null,
+            // Only require long bio if not previously approved, otherwise just existence
+            bio: tutor.bio && tutor.bio.trim().length > 0,
             mode: tutor.mode,
             languages: tutor.languages && tutor.languages.length > 0,
             phone: user.phone && user.phone.trim().length > 0,
@@ -162,6 +163,19 @@ const checkProfileComplete = async (req, res) => {
 
         const missingFields = Object.keys(requiredFields).filter(key => !requiredFields[key]);
         const isComplete = missingFields.length === 0;
+
+        // If profile is already approved or pending, consider it complete to avoid loop
+        if (tutor.approvalStatus === 'approved' || tutor.approvalStatus === 'pending') {
+            // Only force update if ABSOLUTELY critical fields are missing (like subjects)
+            // Otherwise let them in
+            if (missingFields.length === 0) {
+                return res.status(200).json({
+                    isComplete: true,
+                    missingFields: [],
+                    profile: tutor
+                });
+            }
+        }
 
         res.status(200).json({
             isComplete,

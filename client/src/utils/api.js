@@ -9,8 +9,9 @@ export const getBaseURL = () => {
         // If VITE_API_URL is provided, ensure it ends with /api
         baseURL = envURL.endsWith('/api') ? envURL : `${envURL.replace(/\/$/, '')}/api`;
     } else {
-        // Default to localhost with /api for development
-        baseURL = 'http://localhost:5001/api';
+        // Default to local network IP for better device support
+        // This ensures tablets/phones on the same network can connect
+        baseURL = 'http://192.168.29.213:5001/api';
     }
 
     // Log to help debug (both dev and prod)
@@ -34,7 +35,7 @@ api.interceptors.request.use(
         // Log the actual request URL (both dev and prod for debugging)
         const fullURL = config.baseURL + config.url;
         console.log('API Request:', config.method?.toUpperCase(), fullURL);
-        
+
         // Add authorization token if available
         const token = localStorage.getItem('token');
         console.log('Has token:', !!token);

@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
     origin: [
         'http://localhost:5173',
+        'http://192.168.29.213:5173',
         'https://tutnet-ffxb.vercel.app',
         /\.vercel\.app$/  // Allow all Vercel preview deployments
     ],

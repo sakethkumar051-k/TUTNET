@@ -50,7 +50,7 @@ const Navbar = () => {
                                     to="/register"
                                     className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors flex items-center gap-1"
                                 >
-                                    Apply as Tutor
+                                    Apply
                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                     </svg>
